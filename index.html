@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Sistem Rekomendasi AC Pintar — Analisis kapasitas, skema pembiayaan, dan kelayakan investasi AC dengan metrik NPV, IRR, dan Payback Period." />
+  <meta name="keywords" content="AC, pendingin ruangan, rekomendasi AC, NPV, IRR, payback period, skema pembiayaan, inverter" />
+  <meta name="author" content="financialfivestars" />
+  <title>AC Smart Consultant — Rekomendasi & Analisis Investasi AC</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>❄️</text></svg>" />
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body>
+  <!-- Loading Screen -->
+  <div id="loading-screen" class="loading-screen">
+    <div class="loader">
+      <div class="loader-icon">❄️</div>
+      <div class="loader-text">Memuat Database AC...</div>
+      <div class="loader-bar"><div class="loader-progress"></div></div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toast-container"></div>
+
+  <!-- Navigation -->
+  <nav id="main-nav" class="navbar">
+    <div class="nav-container">
+      <a href="#hero" class="nav-brand">
+        <span class="brand-icon">❄️</span>
+        <span class="brand-text">AC Smart</span>
+      </a>
+      <div class="nav-links">
+        <a href="#kalkulasi" class="nav-link" data-section="kalkulasi">Kalkulasi</a>
+        <a href="#rekomendasi" class="nav-link" data-section="rekomendasi">Rekomendasi</a>
+        <a href="#pembiayaan" class="nav-link" data-section="pembiayaan">Pembiayaan</a>
+        <a href="#analisis" class="nav-link" data-section="analisis">Analisis</a>
+      </div>
+      <button id="mobile-menu-btn" class="mobile-menu-btn" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Mobile Nav -->
+  <div id="mobile-nav" class="mobile-nav">
+    <a href="#kalkulasi" class="mobile-nav-link">Kalkulasi</a>
+    <a href="#rekomendasi" class="mobile-nav-link">Rekomendasi</a>
+    <a href="#pembiayaan" class="mobile-nav-link">Pembiayaan</a>
+    <a href="#analisis" class="mobile-nav-link">Analisis</a>
+  </div>
+
+  <main>
+    <!-- HERO SECTION -->
+    <section id="hero" class="hero-section">
+      <div class="hero-bg">
+        <div class="hero-orb orb-1"></div>
+        <div class="hero-orb orb-2"></div>
+        <div class="hero-orb orb-3"></div>
+      </div>
+      <div class="container hero-content">
+        <h1 class="hero-title animate-in">
+          <span class="hero-icon">❄️</span>
+          AC Smart <span class="gradient-text">Consultant</span>
+        </h1>
+        <p class="hero-subtitle animate-in">
+          Sistem Rekomendasi & Kelayakan Investasi Pendingin Ruangan
+        </p>
+        <p class="hero-desc animate-in">
+          Analisis kapasitas AC, skema pembiayaan, dan metrik Capital Budgeting 
+          (NPV, IRR, Payback Period) dari <strong id="db-count">1800+</strong> data perangkat AC terdaftar.
+        </p>
+        <div class="hero-actions animate-in">
+          <a href="#kalkulasi" class="btn btn-primary btn-lg">
+            <span>🚀</span> Mulai Analisis
+          </a>
+          <a href="#rekomendasi" class="btn btn-outline btn-lg">
+            <span>📊</span> Lihat Database
+          </a>
+        </div>
+        <div class="hero-stats animate-in">
+          <div class="stat-item">
+            <div class="stat-value" id="stat-total">0</div>
+            <div class="stat-label">Data AC</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value" id="stat-brands">0</div>
+            <div class="stat-label">Merek</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value" id="stat-inverter">0</div>
+            <div class="stat-label">Tipe Inverter</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 1: KALKULASI BTU -->
+    <section id="kalkulasi" class="section">
+      <div class="container">
+        <div class="section-header animate-in">
+          <span class="section-badge">01</span>
+          <h2 class="section-title">Kalkulasi Kapasitas</h2>
+          <p class="section-desc">Masukkan dimensi ruangan dan jumlah penghuni untuk menghitung kebutuhan BTU</p>
+        </div>
+
+        <div class="calc-grid">
+          <!-- Input Panel -->
+          <div class="glass-card calc-input-panel animate-in">
+            <h3 class="card-title">📐 Data Ruangan</h3>
+            <div class="input-group">
+              <label for="input-panjang">Panjang Ruangan (m)</label>
+              <div class="input-with-unit">
+                <input type="number" id="input-panjang" value="4" min="1" max="50" step="0.5" />
+                <span class="unit">m</span>
+              </div>
+              <input type="range" id="range-panjang" min="1" max="50" step="0.5" value="4" class="range-slider" />
+            </div>
+            <div class="input-group">
+              <label for="input-lebar">Lebar Ruangan (m)</label>
+              <div class="input-with-unit">
+                <input type="number" id="input-lebar" value="3" min="1" max="50" step="0.5" />
+                <span class="unit">m</span>
+              </div>
+              <input type="range" id="range-lebar" min="1" max="50" step="0.5" value="3" class="range-slider" />
+            </div>
+            <div class="input-group">
+              <label for="input-okupansi">Jumlah Orang</label>
+              <div class="stepper">
+                <button class="stepper-btn" data-action="decrement" data-target="input-okupansi">−</button>
+                <input type="number" id="input-okupansi" value="2" min="1" max="50" />
+                <button class="stepper-btn" data-action="increment" data-target="input-okupansi">+</button>
+              </div>
+            </div>
+            <div class="input-group">
+              <label>Luas Ruangan</label>
+              <div class="computed-value" id="display-luas">12 m²</div>
+            </div>
+          </div>
+
+          <!-- BTU Result Panel -->
+          <div class="glass-card calc-result-panel animate-in">
+            <h3 class="card-title">⚡ Kebutuhan Pendinginan</h3>
+            <div class="btu-display">
+              <div class="btu-value" id="display-btu">6,800</div>
+              <div class="btu-unit">BTU/h</div>
+            </div>
+            <div class="pk-display">
+              <div class="pk-badge" id="display-pk">3/4 PK</div>
+            </div>
+            <div class="btu-breakdown">
+              <div class="breakdown-item">
+                <span>Beban Ruangan</span>
+                <span id="display-beban-ruangan">6,000 BTU</span>
+              </div>
+              <div class="breakdown-item">
+                <span>Beban Okupansi</span>
+                <span id="display-beban-orang">800 BTU</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- AC Existing Panel -->
+          <div class="glass-card calc-existing-panel animate-in">
+            <h3 class="card-title">🔄 AC Existing</h3>
+            <div class="input-group">
+              <label class="toggle-label">
+                <span>Punya AC lama?</span>
+                <label class="switch">
+                  <input type="checkbox" id="toggle-existing" />
+                  <span class="switch-slider"></span>
+                </label>
+              </label>
+            </div>
+            <div id="existing-panel" class="existing-inputs" style="display:none;">
+              <div class="input-group">
+                <label for="select-existing-brand">Merek AC Lama</label>
+                <select id="select-existing-brand" class="select-input">
+                  <option value="">-- Pilih Merek --</option>
+                </select>
+              </div>
+              <div class="input-group">
+                <label for="select-existing-model">Model AC Lama</label>
+                <select id="select-existing-model" class="select-input">
+                  <option value="">-- Pilih Model --</option>
+                </select>
+              </div>
+              <div id="existing-info" class="existing-info-box" style="display:none;">
+                <div class="info-row"><span>Tipe:</span><span id="existing-tipe">-</span></div>
+                <div class="info-row"><span>Kapasitas:</span><span id="existing-btu">-</span></div>
+                <div class="info-row"><span>Daya:</span><span id="existing-daya">-</span></div>
+                <div class="info-row"><span>Biaya Listrik/Thn:</span><span id="existing-biaya">-</span></div>
+              </div>
+              <div class="input-group" style="margin-top:1rem;">
+                <label for="input-biaya-lama">Atau input manual biaya listrik/tahun (Rp)</label>
+                <div class="input-with-unit">
+                  <input type="number" id="input-biaya-lama" value="0" min="0" step="100000" />
+                  <span class="unit">Rp</span>
+                </div>
+              </div>
+            </div>
+            
+            <div class="divider"></div>
+            
+            <h3 class="card-title" style="margin-top:1rem;">📊 Parameter Investasi</h3>
+            <div class="input-group">
+              <label for="input-umur-ekonomis">Umur Ekonomis AC (Tahun)</label>
+              <div class="input-with-unit">
+                <input type="number" id="input-umur-ekonomis" value="5" min="1" max="20" />
+                <span class="unit">Thn</span>
+              </div>
+            </div>
+            <div class="input-group">
+              <label for="input-discount-rate">Suku Bunga Diskonto / Inflasi (%)</label>
+              <div class="input-with-unit">
+                <input type="number" id="input-discount-rate" value="6" min="0" max="30" step="0.5" />
+                <span class="unit">%</span>
+              </div>
+            </div>
+            
+            <button id="btn-cari-rekomendasi" class="btn btn-primary btn-block">
+              🔍 Cari Rekomendasi AC
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 2: REKOMENDASI -->
+    <section id="rekomendasi" class="section">
+      <div class="container">
+        <div class="section-header animate-in">
+          <span class="section-badge">02</span>
+          <h2 class="section-title">Rekomendasi AC</h2>
+          <p class="section-desc">AC terbaik yang sesuai dengan kebutuhan ruangan Anda</p>
+        </div>
+
+        <!-- Filters -->
+        <div class="filter-bar glass-card animate-in">
+          <div class="filter-group">
+            <label for="filter-brand">Merek</label>
+            <select id="filter-brand" class="select-input select-sm">
+              <option value="">Semua Merek</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label for="filter-type">Tipe</label>
+            <select id="filter-type" class="select-input select-sm">
+              <option value="">Semua Tipe</option>
+              <option value="Inverter">Inverter</option>
+              <option value="Non-Inverter">Non-Inverter</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label for="filter-rating">Min Rating</label>
+            <select id="filter-rating" class="select-input select-sm">
+              <option value="">Semua</option>
+              <option value="5">⭐⭐⭐⭐⭐</option>
+              <option value="4">⭐⭐⭐⭐+</option>
+              <option value="3">⭐⭐⭐+</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label for="filter-sort">Urutkan</label>
+            <select id="filter-sort" class="select-input select-sm">
+              <option value="rating-desc">Rating Tertinggi</option>
+              <option value="biaya-asc">Biaya Termurah</option>
+              <option value="efisiensi-desc">Efisiensi Tertinggi</option>
+              <option value="daya-asc">Daya Terendah</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <span class="result-count" id="result-count">0 hasil</span>
+          </div>
+        </div>
+
+        <!-- Selected for comparison -->
+        <div id="compare-bar" class="compare-bar glass-card" style="display:none;">
+          <div class="compare-info">
+            <span>📊</span>
+            <span id="compare-count">0</span> AC dipilih untuk perbandingan
+          </div>
+          <div class="compare-actions">
+            <button id="btn-compare" class="btn btn-primary btn-sm">Bandingkan Sekarang</button>
+            <button id="btn-clear-compare" class="btn btn-outline btn-sm">Hapus Semua</button>
+          </div>
+        </div>
+
+        <!-- AC Cards Grid -->
+        <div id="ac-grid" class="ac-grid">
+          <div class="empty-state">
+            <div class="empty-icon">🔍</div>
+            <h3>Masukkan Data Ruangan</h3>
+            <p>Isi data ruangan di bagian Kalkulasi, lalu klik "Cari Rekomendasi AC" untuk melihat hasil.</p>
+          </div>
+        </div>
+
+        <!-- Pagination -->
+        <div id="pagination" class="pagination" style="display:none;">
+          <button id="btn-prev" class="btn btn-outline btn-sm" disabled>← Sebelumnya</button>
+          <span id="page-info" class="page-info">Halaman 1 dari 1</span>
+          <button id="btn-next" class="btn btn-outline btn-sm">Selanjutnya →</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 3: PEMBIAYAAN -->
+    <section id="pembiayaan" class="section">
+      <div class="container">
+        <div class="section-header animate-in">
+          <span class="section-badge">03</span>
+          <h2 class="section-title">Skema Pembiayaan</h2>
+          <p class="section-desc">Simulasi pembelian cash atau kredit untuk AC pilihan Anda</p>
+        </div>
+
+        <div id="financing-content">
+          <div class="empty-state animate-in">
+            <div class="empty-icon">💰</div>
+            <h3>Pilih AC Terlebih Dahulu</h3>
+            <p>Klik "Bandingkan" pada satu atau lebih AC di bagian Rekomendasi untuk melihat skema pembiayaan.</p>
+          </div>
+        </div>
+
+        <div id="financing-active" style="display:none;">
+          <div class="finance-grid">
+            <!-- AC Selection for Financing -->
+            <div class="glass-card animate-in">
+              <h3 class="card-title">🎯 AC Dipilih</h3>
+              <select id="finance-ac-select" class="select-input">
+                <option value="">-- Pilih AC --</option>
+              </select>
+              <div id="finance-ac-info" class="finance-ac-info" style="display:none;"></div>
+            </div>
+
+            <!-- Financing Mode -->
+            <div class="glass-card animate-in">
+              <h3 class="card-title">💳 Mode Pembayaran</h3>
+              <div class="tab-group">
+                <div class="tab-bar">
+                  <button class="tab-btn active" data-tab="tab-cash">Cash</button>
+                  <button class="tab-btn" data-tab="tab-credit">Kredit</button>
+                </div>
+                
+                <div id="tab-cash" class="tab-content active">
+                  <div class="cash-summary" id="cash-summary">
+                    <div class="big-price">
+                      <span class="price-label">Total Harga</span>
+                      <span class="price-value" id="cash-price">Rp 0</span>
+                    </div>
+                    <p class="price-note">*Harga estimasi berdasarkan kapasitas dan tipe AC</p>
+                  </div>
+                </div>
+
+                <div id="tab-credit" class="tab-content" style="display:none;">
+                  <div class="credit-inputs">
+                    <div class="input-group">
+                      <label for="input-dp">Uang Muka / DP (%)</label>
+                      <div class="input-with-unit">
+                        <input type="number" id="input-dp" value="20" min="0" max="100" step="5" />
+                        <span class="unit">%</span>
+                      </div>
+                      <input type="range" id="range-dp" min="0" max="100" step="5" value="20" class="range-slider" />
+                    </div>
+                    <div class="input-group">
+                      <label for="input-bunga">Suku Bunga per Tahun (%)</label>
+                      <div class="input-with-unit">
+                        <input type="number" id="input-bunga" value="12" min="0" max="50" step="0.5" />
+                        <span class="unit">%</span>
+                      </div>
+                    </div>
+                    <div class="input-group">
+                      <label for="input-tenor">Tenor Cicilan (Bulan)</label>
+                      <div class="tenor-options">
+                        <button class="tenor-btn" data-tenor="6">6 bln</button>
+                        <button class="tenor-btn" data-tenor="12">12 bln</button>
+                        <button class="tenor-btn active" data-tenor="18">18 bln</button>
+                        <button class="tenor-btn" data-tenor="24">24 bln</button>
+                        <button class="tenor-btn" data-tenor="36">36 bln</button>
+                      </div>
+                      <input type="number" id="input-tenor" value="18" min="1" max="60" class="hidden" />
+                    </div>
+                    <button id="btn-hitung-kredit" class="btn btn-primary btn-block">Hitung Cicilan</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Credit Results -->
+          <div id="credit-results" class="credit-results" style="display:none;">
+            <div class="credit-summary-grid animate-in">
+              <div class="glass-card metric-card">
+                <div class="metric-icon">💵</div>
+                <div class="metric-label">Uang Muka</div>
+                <div class="metric-value" id="credit-dp">Rp 0</div>
+              </div>
+              <div class="glass-card metric-card">
+                <div class="metric-icon">📅</div>
+                <div class="metric-label">Cicilan / Bulan</div>
+                <div class="metric-value highlight" id="credit-cicilan">Rp 0</div>
+              </div>
+              <div class="glass-card metric-card">
+                <div class="metric-icon">💰</div>
+                <div class="metric-label">Total Pembayaran</div>
+                <div class="metric-value" id="credit-total">Rp 0</div>
+              </div>
+              <div class="glass-card metric-card">
+                <div class="metric-icon">📈</div>
+                <div class="metric-label">Total Bunga</div>
+                <div class="metric-value warning" id="credit-bunga">Rp 0</div>
+              </div>
+            </div>
+
+            <!-- Pie Chart -->
+            <div class="glass-card chart-card animate-in">
+              <div class="chart-container">
+                <canvas id="chart-financing-pie"></canvas>
+              </div>
+            </div>
+
+            <!-- Amortization Table -->
+            <div class="glass-card animate-in">
+              <div class="table-header">
+                <h3 class="card-title">📋 Tabel Amortisasi</h3>
+                <button id="btn-toggle-amortisasi" class="btn btn-outline btn-sm">Tampilkan</button>
+              </div>
+              <div id="amortisasi-wrapper" style="display:none;">
+                <div class="table-responsive">
+                  <table class="data-table" id="table-amortisasi">
+                    <thead>
+                      <tr>
+                        <th>Bulan</th>
+                        <th>Cicilan</th>
+                        <th>Pokok</th>
+                        <th>Bunga</th>
+                        <th>Sisa Pinjaman</th>
+                      </tr>
+                    </thead>
+                    <tbody></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 4: ANALISIS INVESTASI -->
+    <section id="analisis" class="section">
+      <div class="container">
+        <div class="section-header animate-in">
+          <span class="section-badge">04</span>
+          <h2 class="section-title">Analisis Investasi</h2>
+          <p class="section-desc">Evaluasi kelayakan investasi penggantian AC dengan metrik Capital Budgeting</p>
+        </div>
+
+        <div id="analysis-content">
+          <div class="empty-state animate-in" id="analysis-empty">
+            <div class="empty-icon">📊</div>
+            <h3>Aktifkan AC Existing & Pilih Perbandingan</h3>
+            <p>Aktifkan toggle "Punya AC lama" di Kalkulasi, lalu pilih AC untuk dibandingkan di Rekomendasi.</p>
+          </div>
+        </div>
+
+        <div id="analysis-active" style="display:none;">
+          <!-- Individual Analysis Cards -->
+          <div id="analysis-cards" class="analysis-cards-grid"></div>
+
+          <!-- Charts -->
+          <div class="charts-grid">
+            <div class="glass-card chart-card animate-in">
+              <div class="chart-container">
+                <canvas id="chart-cost-comparison"></canvas>
+              </div>
+            </div>
+            <div class="glass-card chart-card animate-in">
+              <div class="chart-container">
+                <canvas id="chart-npv"></canvas>
+              </div>
+            </div>
+            <div class="glass-card chart-card animate-in">
+              <div class="chart-container">
+                <canvas id="chart-irr"></canvas>
+              </div>
+            </div>
+            <div class="glass-card chart-card animate-in">
+              <div class="chart-container">
+                <canvas id="chart-payback"></canvas>
+              </div>
+            </div>
+            <div class="glass-card chart-card chart-card-wide animate-in">
+              <div class="chart-container chart-container-tall">
+                <canvas id="chart-radar"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-brand">
+          <span>❄️ AC Smart Consultant</span>
+          <p>Sistem Rekomendasi & Analisis Investasi AC</p>
+        </div>
+        <div class="footer-info">
+          <p>Database: EBTKE — Kementerian ESDM RI</p>
+          <p>© 2026 financialfivestars</p>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
