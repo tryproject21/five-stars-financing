@@ -31,8 +31,10 @@ export async function loadDatabase() {
   try {
     // Ambil file CSV dari server
     // Gunakan base URL dari Vite agar kompatibel saat deploy (misal GitHub Pages)
+    // Tambahkan parameter ?v=timestamp agar browser tidak menggunakan cache lama
     const base = import.meta.env.BASE_URL || '/';
-    const response = await fetch(base + 'data/ac-database.csv');
+    const timestamp = new Date().getTime();
+    const response = await fetch(`${base}data/ac-database.csv?v=${timestamp}`);
     const csvText = await response.text();
 
     // Bersihkan entitas HTML yang mungkin ada di header
