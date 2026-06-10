@@ -118,6 +118,7 @@ export function createACCard(ac, index, isSelected = false) {
   const model = ac['Model'] || ac['Famili'] || '-';
   const tipe = ac['Tipe'] || '-';
   const efisiensi = ac['Nilai Efisiensi (EER/CSPF)'] || '-';
+  const baseline = ac['Baseline'] || '';
   const no = ac['No'] || index;
   
   return `
@@ -142,7 +143,7 @@ export function createACCard(ac, index, isSelected = false) {
           </div>
           <div class="spec">
             <span class="spec-label">Efisiensi</span>
-            <span class="spec-value">${typeof efisiensi === 'number' ? efisiensi.toFixed(2) : efisiensi}</span>
+            <span class="spec-value">${typeof efisiensi === 'number' ? efisiensi.toFixed(2) : efisiensi} ${baseline}</span>
           </div>
           <div class="spec">
             <span class="spec-label">Biaya Listrik/Thn</span>
