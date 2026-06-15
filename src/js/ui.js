@@ -164,6 +164,7 @@ export function createACCard(ac, index, isSelected = false) {
 export function createLampuCard(lampu, index, isSelected = false) {
   const daya = lampu['Daya (Watt)'];
   const efikasi = lampu['Efikasi (Lumen/watt)'];
+  const konsumsi = lampu['Konsumsi Energi Tahunan (kWh)*'];
   const biaya = lampu['Biaya Listrik Tahunan (Rp)'];
   const merek = lampu['Merek'] || '-';
   const model = lampu['Model'] || '-';
@@ -188,8 +189,8 @@ export function createLampuCard(lampu, index, isSelected = false) {
             <span class="spec-value">${typeof efikasi === 'number' ? efikasi.toLocaleString('id-ID', {maximumFractionDigits: 1}) : efikasi} lm/W</span>
           </div>
           <div class="spec">
-            <span class="spec-label">Total Lumen</span>
-            <span class="spec-value">${(daya && efikasi) ? Math.round(daya * efikasi).toLocaleString('id-ID') : '-'} lm</span>
+            <span class="spec-label">Konsumsi Listrik</span>
+            <span class="spec-value">${typeof konsumsi === 'number' ? konsumsi.toLocaleString('id-ID', {maximumFractionDigits: 1}) : konsumsi} kWh</span>
           </div>
           <div class="spec">
             <span class="spec-label">Biaya Listrik/Thn</span>
