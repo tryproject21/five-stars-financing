@@ -1149,7 +1149,7 @@ function runInvestmentAnalysisLampu() {
   const paybackValues = [];
   const biayaBaruArr = [];
 
-  const cardsHtml = stateLampu.selectedLampu.map(lampu => {
+  const cardsHtml = stateLampu.selectedLampu.map((lampu, index) => {
     const dayaLampu = lampu['Daya (Watt)'] || 0;
     const biayaBaru = lampu['Biaya Listrik Tahunan (Rp)'] || 0;
     const harga = estimasiHargaLampu(dayaLampu);
@@ -1181,7 +1181,7 @@ function runInvestmentAnalysisLampu() {
     const irrClass = irr > stateLampu.bunga ? 'positive' : 'negative';
     const ppClass = paybackPeriod <= stateLampu.umurEkonomis ? 'positive' : 'negative';
 
-    const name = lampu['Merek'] + ' — ' + (lampu['Model'] || '-').substring(0, 40);
+    const name = `Lampu ${index + 1}`;
     acNames.push(name);
     npvValues.push(npv);
     irrValues.push(irr);
@@ -1191,7 +1191,7 @@ function runInvestmentAnalysisLampu() {
     return `
       <div class="analysis-card ${cardStatus} animate-in">
         <div class="analysis-card-header">
-          <h4>${name}</h4>
+          <h4 title="${lampu['Merek']} — ${lampu['Model'] || '-'}">${name}: ${lampu['Merek']} — ${(lampu['Model'] || '-').substring(0, 25)}...</h4>
           <span class="verdict-badge ${cardStatus}">${keputusan}</span>
         </div>
         <div class="analysis-metrics">
@@ -1229,7 +1229,7 @@ function runInvestmentAnalysisLampu() {
   document.getElementById('analysis-cards-lampu').innerHTML = cardsHtml;
   
   // Create charts
-  createCostComparisonChart('chart-cost-comparison-lampu', acNames, biayaBaruArr, stateLampu.biayaLama);
+  createCostComparisonChart('chart-cost-comparison-lampu', acNames, biayaBaruArr, stateLampu.biayaLama, 'Biaya Listrik Lampu Baru (Rp/tahun)', 'Biaya Listrik Lampu Lama (Rp/tahun)');
   createNPVComparisonChart('chart-npv-lampu', acNames, npvValues);
   createIRRComparisonChart('chart-irr-lampu', acNames, irrValues, stateLampu.bunga);
   createPaybackChart('chart-payback-lampu', acNames, paybackValues, stateLampu.umurEkonomis);

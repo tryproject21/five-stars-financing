@@ -84,14 +84,14 @@ const darkThemeDefaults = {
 };
 
 // 1. Bar chart: Perbandingan Biaya Listrik Tahunan (AC baru vs AC lama)
-export function createCostComparisonChart(canvasId, acNames, biayaBaru, biayaLama = null) {
+export function createCostComparisonChart(canvasId, acNames, biayaBaru, biayaLama = null, labelBaru = 'Biaya Listrik AC Baru (Rp/tahun)', labelLama = 'Biaya Listrik AC Lama (Rp/tahun)') {
   destroyChart(canvasId);
   const ctx = document.getElementById(canvasId)?.getContext('2d');
   if (!ctx) return null;
   
   const datasets = [
     {
-      label: 'Biaya Listrik AC Baru (Rp/tahun)',
+      label: labelBaru,
       data: biayaBaru,
       backgroundColor: PALETTE_ALPHA.slice(0, biayaBaru.length),
       borderColor: PALETTE.slice(0, biayaBaru.length),
@@ -104,7 +104,7 @@ export function createCostComparisonChart(canvasId, acNames, biayaBaru, biayaLam
   // Tambahkan dataset AC lama jika tersedia
   if (biayaLama !== null) {
     datasets.push({
-      label: 'Biaya Listrik AC Lama (Rp/tahun)',
+      label: labelLama,
       data: Array(acNames.length).fill(biayaLama),
       backgroundColor: COLORS.redAlpha,
       borderColor: COLORS.red,
