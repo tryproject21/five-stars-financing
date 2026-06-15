@@ -106,6 +106,8 @@ async function init() {
       });
     }
 
+    populateBrandSelect('select-existing-brand-lampu', brandsLampu);
+
     // Hide loading screen
     setTimeout(() => {
       document.getElementById('loading-screen').classList.add('hidden');
@@ -903,6 +905,64 @@ function bindEventsLampu() {
   document.getElementById('filter-brand-lampu').addEventListener('change', applyFiltersLampu);
   document.getElementById('btn-compare-lampu').addEventListener('click', runComparisonLampu);
   document.getElementById('btn-clear-compare-lampu').addEventListener('click', clearComparisonLampu);
+
+  // --- Lampu Existing toggle ---
+  const toggleLampu = document.getElementById('toggle-existing-lampu');
+  toggleLampu.addEventListener('change', () => {
+    const panel = document.getElementById('existing-panel-lampu');
+    panel.style.display = toggleLampu.checked ? 'block' : 'none';
+  });
+
+  // --- Select Lampu Lama Brand ---
+  document.getElementById('select-existing-brand-lampu').addEventListener('change', (e) => {
+    const brand = e.target.value;
+    const modelSelect = document.getElementById('select-existing-model-lampu');
+    const infoBox = document.getElementById('existing-info-lampu');
+    
+    // Reset
+    modelSelect.innerHTML = '<option value="">-- Pilih Model --</option>';
+    infoBox.style.display = 'none';
+    
+    if (brand) {
+      const db = getDatabaseLampu();
+      const models = db.filter(l => l['Merek'] === brand);
+      models.forEach(l => {
+        const opt = document.createElement('option');
+        opt.value = l['No'];
+        opt.textContent = `${l['Model'] || l['Famili'] || 'Unknown'} (${l['Daya (Watt)']}W)`;
+        modelSelect.appendChild(opt);
+      });
+    }
+  });
+
+  // --- Select Lampu Lama Model ---
+  document.getElementById('select-existing-model-lampu').addEventListener('change', (e) => {
+    const no = e.target.value;
+    const infoBox = document.getElementById('existing-info-lampu');
+    if (!no) {
+      infoBox.style.display = 'none';
+      return;
+    }
+
+    const lampu = getLampuById(no);
+    if (lampu) {
+      infoBox.style.display = 'block';
+      document.getElementById('existing-tipe-lampu').textContent = lampu['Tipe'] || lampu['Famili'] || '-';
+      document.getElementById('existing-daya-lampu').textContent = (lampu['Daya (Watt)'] || 0) + ' Watt';
+      document.getElementById('existing-efikasi-lampu').textContent = (lampu['Efikasi (Lumen/watt)'] || 0) + ' lm/W';
+      document.getElementById('existing-biaya-lampu').textContent = formatRupiah(lampu['Biaya Listrik Tahunan (Rp)'] || 0);
+
+      // Auto-fill manual inputs
+      const manualDaya = document.getElementById('input-daya-lampu');
+      const manualBiaya = document.getElementById('input-biaya-lampu-lama');
+      manualDaya.value = lampu['Daya (Watt)'] || 0;
+      manualBiaya.value = lampu['Biaya Listrik Tahunan (Rp)'] || 0;
+
+      // Update state
+      stateLampu.dayaLama = parseFloat(manualDaya.value) || 0;
+      stateLampu.biayaLama = parseFloat(manualBiaya.value) || 0;
+    }
+  });
 }
 
 function findRecommendationsLampu() {

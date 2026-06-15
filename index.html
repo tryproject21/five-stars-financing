@@ -572,17 +572,47 @@
             <p class="section-desc">Masukkan detail lampu lama (Eksisting) untuk dicari padanannya</p>
           </div>
           <div class="calc-grid">
-            <div class="glass-card calc-input-panel animate-in">
+            <div class="glass-card calc-existing-panel animate-in">
               <h3 class="card-title">💡 Lampu Lama</h3>
               <div class="input-group">
-                <label for="input-daya-lampu">Daya Lampu Lama (Watt)</label>
+                <label class="toggle-label">
+                  <span>Pilih dari database?</span>
+                  <label class="switch">
+                    <input type="checkbox" id="toggle-existing-lampu" />
+                    <span class="switch-slider"></span>
+                  </label>
+                </label>
+              </div>
+              <div id="existing-panel-lampu" class="existing-inputs" style="display:none;">
+                <div class="input-group">
+                  <label for="select-existing-brand-lampu">Merek Lampu Lama</label>
+                  <select id="select-existing-brand-lampu" class="select-input">
+                    <option value="">-- Pilih Merek --</option>
+                  </select>
+                </div>
+                <div class="input-group">
+                  <label for="select-existing-model-lampu">Model Lampu Lama</label>
+                  <select id="select-existing-model-lampu" class="select-input">
+                    <option value="">-- Pilih Model --</option>
+                  </select>
+                </div>
+                <div id="existing-info-lampu" class="existing-info-box" style="display:none;">
+                  <div class="info-row"><span>Tipe:</span><span id="existing-tipe-lampu">-</span></div>
+                  <div class="info-row"><span>Daya:</span><span id="existing-daya-lampu">-</span></div>
+                  <div class="info-row"><span>Efikasi:</span><span id="existing-efikasi-lampu">-</span></div>
+                  <div class="info-row"><span>Biaya Listrik/Thn:</span><span id="existing-biaya-lampu">-</span></div>
+                </div>
+              </div>
+              
+              <div class="input-group" style="margin-top:1rem;">
+                <label for="input-daya-lampu">Daya Lampu (Watt)</label>
                 <div class="input-with-unit">
                   <input type="number" id="input-daya-lampu" value="40" min="1" max="200" step="1" />
                   <span class="unit">W</span>
                 </div>
               </div>
               <div class="input-group">
-                <label for="input-biaya-lampu-lama">Biaya Listrik Tahunan Lampu Lama (Rp)</label>
+                <label for="input-biaya-lampu-lama">Biaya Listrik Tahunan (Rp)</label>
                 <div class="input-with-unit">
                   <input type="number" id="input-biaya-lampu-lama" value="150000" min="0" step="10000" />
                   <span class="unit">Rp</span>
