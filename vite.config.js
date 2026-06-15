@@ -2,7 +2,7 @@ import { defineConfig } from 'vite';
 
 export default defineConfig({
   root: '.',
-  base: '/ac-smart-consultant/',
+  base: '/',
   build: {
     outDir: 'dist',
     assetsDir: 'assets',
