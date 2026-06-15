@@ -14,6 +14,26 @@ export function estimasiHargaLampu(daya) {
 }
 
 /**
+ * Menghitung kapasitas cahaya (Lumen) dan estimasi daya (Watt) berdasarkan ruangan.
+ * Rumus: Φ = (E * A) / (CU * LLF) dimana CU * LLF = 0.6
+ * Estimasi LED: 100 Lumen / Watt
+ * @param {number} lux - Target pencahayaan (Lux) berdasarkan SNI.
+ * @param {number} panjang - Panjang ruangan (m).
+ * @param {number} lebar - Lebar ruangan (m).
+ * @returns {Object} Objek berisi kebutuhanLumen dan kebutuhanWatt.
+ */
+export function hitungKapasitasLampu(lux, panjang, lebar) {
+  const luas = panjang * lebar;
+  const faktor = 0.6; // CU * LLF
+  const kebutuhanLumen = (lux * luas) / faktor;
+  const kebutuhanWatt = Math.round(kebutuhanLumen / 100);
+  return {
+    kebutuhanLumen: Math.round(kebutuhanLumen),
+    kebutuhanWatt: kebutuhanWatt > 0 ? kebutuhanWatt : 1
+  };
+}
+
+/**
  * Menghitung penghematan tahunan jika mengganti lampu lama dengan LED baru.
  * @param {number} biayaLama - Biaya listrik lampu lama per tahun.
  * @param {number} biayaBaru - Biaya listrik lampu LED baru per tahun.

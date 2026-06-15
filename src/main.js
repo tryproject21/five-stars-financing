@@ -30,7 +30,7 @@ import {
 } from './js/ui.js';
 
 import { loadDatabaseLampu, getDatabaseLampu, getBrandsLampu, filterByBrandLampu, getLampuById } from './js/database-lampu.js';
-import { estimasiHargaLampu, hitungPenghematanLampu, hitungDampakLingkungan, hitungNPV, hitungIRR } from './js/calculator-lampu.js';
+import { estimasiHargaLampu, hitungPenghematanLampu, hitungDampakLingkungan, hitungNPV, hitungIRR, hitungKapasitasLampu } from './js/calculator-lampu.js';
 
 // ========================
 // STATE
@@ -893,6 +893,40 @@ function populateBrandSelect(selectId, brands) {
 // ========================
 
 function bindEventsLampu() {
+  // --- Sinkronisasi Input & Slider Ruangan Lampu ---
+  const syncInputLampu = (inputId, rangeId) => {
+    const input = document.getElementById(inputId);
+    const range = document.getElementById(rangeId);
+    if (!input || !range) return;
+    input.addEventListener('input', (e) => range.value = e.target.value);
+    range.addEventListener('input', (e) => input.value = e.target.value);
+  };
+  syncInputLampu('input-panjang-lampu-ruang', 'range-panjang-lampu-ruang');
+  syncInputLampu('input-lebar-lampu-ruang', 'range-lebar-lampu-ruang');
+
+  // --- Hitung Kapasitas ---
+  document.getElementById('btn-hitung-kapasitas-lampu').addEventListener('click', () => {
+    const lux = parseFloat(document.getElementById('input-tipe-ruangan-lampu').value);
+    const panjang = parseFloat(document.getElementById('input-panjang-lampu-ruang').value);
+    const lebar = parseFloat(document.getElementById('input-lebar-lampu-ruang').value);
+    
+    if (!lux || !panjang || !lebar) {
+      showToast('Harap isi semua dimensi ruangan dengan benar', 'warning');
+      return;
+    }
+    
+    const { kebutuhanLumen, kebutuhanWatt } = hitungKapasitasLampu(lux, panjang, lebar);
+    
+    document.getElementById('hasil-kapasitas-lampu').style.display = 'block';
+    document.getElementById('val-kapasitas-lumen').textContent = formatShort(kebutuhanLumen) + ' Lumen';
+    document.getElementById('val-kapasitas-watt').textContent = kebutuhanWatt + ' W';
+    
+    // Set state target daya
+    stateLampu.dayaLama = kebutuhanWatt;
+    document.getElementById('input-daya-lampu').value = kebutuhanWatt; // Update UI manual override
+
+    showToast('Kapasitas berhasil dihitung! Lanjut cari rekomendasi.', 'success');
+  });
   document.getElementById('input-daya-lampu').addEventListener('input', (e) => {
     stateLampu.dayaLama = parseFloat(e.target.value) || 0;
   });

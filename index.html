@@ -572,8 +572,52 @@
             <p class="section-desc">Masukkan detail lampu lama (Eksisting) untuk dicari padanannya</p>
           </div>
           <div class="calc-grid">
+            <!-- PANEL: Kebutuhan Cahaya Ruangan -->
+            <div class="glass-card calc-input-panel animate-in">
+              <h3 class="card-title">📐 Kebutuhan Cahaya Ruangan</h3>
+              <div class="input-group">
+                <label for="input-tipe-ruangan-lampu">Tipe Ruangan</label>
+                <select id="input-tipe-ruangan-lampu" class="select-input">
+                  <option value="325">Ruang Kerja / Belajar (300-350 Lux)</option>
+                  <option value="250">Dapur (250 Lux)</option>
+                  <option value="200" selected>Ruang Tamu / Keluarga (150-250 Lux)</option>
+                  <option value="125">Kamar Tidur (100-150 Lux)</option>
+                  <option value="175">Kamar Mandi (100-250 Lux)</option>
+                  <option value="75">Teras / Garasi (50-100 Lux)</option>
+                </select>
+              </div>
+              <div class="input-group">
+                <label for="input-panjang-lampu-ruang">Panjang Ruangan (m)</label>
+                <div class="input-with-unit">
+                  <input type="number" id="input-panjang-lampu-ruang" value="3" min="1" max="50" step="0.5" />
+                  <span class="unit">m</span>
+                </div>
+                <input type="range" id="range-panjang-lampu-ruang" min="1" max="50" step="0.5" value="3" class="range-slider" />
+              </div>
+              <div class="input-group">
+                <label for="input-lebar-lampu-ruang">Lebar Ruangan (m)</label>
+                <div class="input-with-unit">
+                  <input type="number" id="input-lebar-lampu-ruang" value="3" min="1" max="50" step="0.5" />
+                  <span class="unit">m</span>
+                </div>
+                <input type="range" id="range-lebar-lampu-ruang" min="1" max="50" step="0.5" value="3" class="range-slider" />
+              </div>
+              <button id="btn-hitung-kapasitas-lampu" class="btn btn-primary btn-block" style="margin-top:1.5rem;">
+                Hitung Kapasitas
+              </button>
+              
+              <div id="hasil-kapasitas-lampu" class="result-box" style="display:none; margin-top:1.5rem;">
+                <div class="result-header">Rekomendasi Kapasitas:</div>
+                <div class="result-value" id="val-kapasitas-lumen">0 Lumen</div>
+                <div class="result-desc" style="font-size:0.9rem; margin-top:0.5rem; color:var(--text-secondary);">
+                  Setara dengan lampu LED <strong><span id="val-kapasitas-watt" style="color:var(--accent-cyan); font-weight:600;">0 W</span></strong>
+                </div>
+              </div>
+            </div>
+
+            <!-- PANEL: Lampu Lama -->
             <div class="glass-card calc-existing-panel animate-in">
-              <h3 class="card-title">💡 Lampu Lama</h3>
+              <h3 class="card-title">💡 Lampu Lama (Opsional)</h3>
               <div class="input-group">
                 <label class="toggle-label">
                   <span>Pilih dari database?</span>
