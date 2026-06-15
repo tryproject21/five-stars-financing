@@ -194,6 +194,7 @@ body {
   background-clip: text;
 }
 
+.nav-links {
   display: flex;
   align-items: center;
   gap: 0.5rem;
