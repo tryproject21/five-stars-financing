@@ -1143,13 +1143,18 @@ function runComparisonLampu() {
 }
 
 function runInvestmentAnalysisLampu() {
+  const acNames = [];
+  const npvValues = [];
+  const irrValues = [];
+  const paybackValues = [];
+  const biayaBaruArr = [];
+
   const cardsHtml = stateLampu.selectedLampu.map(lampu => {
     const dayaLampu = lampu['Daya (Watt)'] || 0;
     const biayaBaru = lampu['Biaya Listrik Tahunan (Rp)'] || 0;
     const harga = estimasiHargaLampu(dayaLampu);
     
     const hemat = hitungPenghematanLampu(stateLampu.biayaLama, biayaBaru);
-    const lingkungan = hitungDampakLingkungan(hemat, stateLampu.tarifListrik);
 
     let cashFlows = [-harga];
     for(let i = 0; i < stateLampu.umurEkonomis; i++){
@@ -1165,45 +1170,57 @@ function runInvestmentAnalysisLampu() {
       paybackPeriod = harga / hemat;
     }
 
-    let status = 'LAYAK';
-    let statusClass = 'success';
+    let cardStatus = 'layak';
+    let keputusan = 'LAYAK (GO)';
     if (npv < 0 || paybackPeriod > stateLampu.umurEkonomis) {
-      status = 'TIDAK LAYAK';
-      statusClass = 'danger';
+      cardStatus = 'tidak-layak';
+      keputusan = 'TIDAK LAYAK (NO GO)';
     }
 
+    const npvClass = npv >= 0 ? 'positive' : 'negative';
+    const irrClass = irr > stateLampu.bunga ? 'positive' : 'negative';
+    const ppClass = paybackPeriod <= stateLampu.umurEkonomis ? 'positive' : 'negative';
+
+    const name = lampu['Merek'] + ' — ' + (lampu['Model'] || '-').substring(0, 40);
+    acNames.push(name);
+    npvValues.push(npv);
+    irrValues.push(irr);
+    paybackValues.push(paybackPeriod === Infinity ? stateLampu.umurEkonomis * 2 : paybackPeriod);
+    biayaBaruArr.push(biayaBaru);
+
     return `
-      <div class="glass-card analysis-card animate-in">
+      <div class="analysis-card ${cardStatus} animate-in">
         <div class="analysis-card-header">
-          <h4>${lampu['Merek']} — ${lampu['Model'] || '-'}</h4>
-          <span class="verdict-badge ${statusClass}">${status}</span>
+          <h4>${name}</h4>
+          <span class="verdict-badge ${cardStatus}">${keputusan}</span>
         </div>
         <div class="analysis-metrics">
           <div class="analysis-metric">
-            <div class="m-label">Investasi</div>
-            <div class="m-value">${formatShort(harga)}</div>
-          </div>
-          <div class="analysis-metric">
-            <div class="m-label">Penghematan / Thn</div>
-            <div class="m-value ${hemat > 0 ? 'success' : ''}">${formatShort(Math.round(hemat))}</div>
-          </div>
-          <div class="analysis-metric">
             <div class="m-label">Simple Payback</div>
-            <div class="m-value">${paybackPeriod === Infinity ? '∞' : paybackPeriod.toFixed(1)} thn</div>
+            <div class="m-value ${ppClass}">
+              ${paybackPeriod === Infinity ? '∞' : paybackPeriod.toFixed(1)} thn
+            </div>
           </div>
           <div class="analysis-metric">
             <div class="m-label">NPV</div>
-            <div class="m-value">${formatShort(Math.round(npv))}</div>
+            <div class="m-value ${npvClass}">
+              ${formatShort(Math.round(npv))}
+            </div>
           </div>
           <div class="analysis-metric">
             <div class="m-label">IRR</div>
-            <div class="m-value">${(irr * 100).toFixed(1)}%</div>
+            <div class="m-value ${irrClass}">
+              ${(irr * 100).toFixed(1)}%
+            </div>
           </div>
         </div>
-        <div class="env-impact" style="display: none; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.1);">
-          <div style="font-weight:600; margin-bottom: 0.5rem; color: #10b981;">🌱 Dampak Lingkungan (Reduksi per Tahun)</div>
-          <div>⚡ Energi: <strong>${Math.round(lingkungan.hematKwh)} kWh</strong></div>
-          <div>☁️ Emisi Karbon: <strong>${lingkungan.reduksiCO2.toFixed(1)} kg CO2</strong></div>
+        <div class="analysis-saving">
+          <span>Penghematan / Tahun</span>
+          <span>${hemat > 0 ? formatRupiah(hemat) : 'Tidak ada'}</span>
+        </div>
+        <div class="analysis-saving" style="margin-top:0.35rem;">
+          <span>Investasi Awal</span>
+          <span>${formatRupiah(harga)}</span>
         </div>
       </div>
     `;
@@ -1211,9 +1228,15 @@ function runInvestmentAnalysisLampu() {
 
   document.getElementById('analysis-cards-lampu').innerHTML = cardsHtml;
   
+  // Create charts
+  createCostComparisonChart('chart-cost-comparison-lampu', acNames, biayaBaruArr, stateLampu.biayaLama);
+  createNPVComparisonChart('chart-npv-lampu', acNames, npvValues);
+  createIRRComparisonChart('chart-irr-lampu', acNames, irrValues, stateLampu.bunga);
+  createPaybackChart('chart-payback-lampu', acNames, paybackValues, stateLampu.umurEkonomis);
+  
   // Animate cards
   requestAnimationFrame(() => {
-    document.querySelectorAll('#analysis-cards-lampu .animate-in').forEach((el, i) => {
+    document.querySelectorAll('#analysis-cards-lampu .animate-in, #analysis-active-lampu .charts-grid .animate-in').forEach((el, i) => {
       setTimeout(() => el.classList.add('visible'), i * 100);
     });
   });
