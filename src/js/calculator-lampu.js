@@ -57,6 +57,9 @@ export function hitungNPV(rate, cashFlows) {
  * @returns {number} Nilai IRR dalam bentuk desimal (misal 0.15 untuk 15%).
  */
 export function hitungIRR(cashFlows, iterations = 100) {
+  const totalCF = cashFlows.reduce((a, b) => a + b, 0);
+  if (totalCF <= 0) return 0;
+
   let rate1 = 0.0;
   let rate2 = 0.1;
   let npv1 = hitungNPV(rate1, cashFlows);
@@ -69,6 +72,9 @@ export function hitungIRR(cashFlows, iterations = 100) {
     rate2 = rateNew;
     npv1 = npv2;
     npv2 = hitungNPV(rate2, cashFlows);
+    
+    // Cegah angka IRR yang gila akibat divergen
+    if (!isFinite(rate2) || Math.abs(rate2) > 100) return 0;
   }
   return rate2;
 }

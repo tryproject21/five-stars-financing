@@ -32,6 +32,9 @@ export function hitungNPV(rate, cashFlows) {
  * @returns {number} Nilai IRR dalam desimal
  */
 export function hitungIRR(cashFlows, tolerance = 0.0001, maxIterations = 100) {
+  const totalCF = cashFlows.reduce((a, b) => a + b, 0);
+  if (totalCF <= 0) return 0;
+
   // Dua tebakan awal untuk metode Secant
   let rate1 = 0.0;
   let rate2 = 0.1;
@@ -53,6 +56,9 @@ export function hitungIRR(cashFlows, tolerance = 0.0001, maxIterations = 100) {
     rate2 = rateNew;
     npv1 = npv2;
     npv2 = hitungNPV(rate2, cashFlows);
+
+    // Cegah angka IRR yang gila akibat divergen
+    if (!isFinite(rate2) || Math.abs(rate2) > 100) return 0;
   }
 
   // Kembalikan hasil terbaik meskipun belum konvergen sempurna
