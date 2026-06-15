@@ -1525,6 +1525,7 @@ main {
   background: var(--bg-secondary);
   border-top: 1px solid rgba(255, 255, 255, 0.06);
   padding: 2rem 0;
+  margin-top: auto;
 }
 
 .footer-content {
