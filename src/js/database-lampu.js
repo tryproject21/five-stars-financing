@@ -6,9 +6,9 @@ let uniqueBrands = [];
 const KOLOM_NUMERIK = [
   'Daya (Watt)',
   'Efikasi (Lumen/watt)',
-  'Tingkat Bintang <br> (1-5)',
-  'Konsumsi Energi Tahunan <br>(kWh)*',
-  'Biaya Listrik <br>Tahunan (Rp)'
+  'Tingkat Bintang (1-5)',
+  'Konsumsi Energi Tahunan (kWh)*',
+  'Biaya Listrik Tahunan (Rp)'
 ];
 
 export async function loadDatabaseLampu() {
@@ -32,7 +32,7 @@ export async function loadDatabaseLampu() {
     lampuDatabase = hasil.data.map(row => {
       const barisClean = {};
       for (const [key, value] of Object.entries(row)) {
-        const cleanKey = key.trim();
+        const cleanKey = key.replace(/<br>/gi, '').replace(/\s+/g, ' ').trim();
         const cleanVal = typeof value === 'string' ? value.trim() : value;
         barisClean[cleanKey] = cleanVal;
       }
