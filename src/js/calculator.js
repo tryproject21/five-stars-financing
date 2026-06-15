@@ -6,15 +6,17 @@
 
 /**
  * Hitung kebutuhan BTU berdasarkan dimensi ruangan dan jumlah okupansi.
- * Formula: (panjang × lebar × 500) + (okupansi × 400)
+ * Formula: (panjang × lebar × tinggi × 200) + (okupansi × 400)
+ * Asumsi: 200 BTU per meter kubik volume ruangan.
  * 
  * @param {number} panjang - Panjang ruangan dalam meter
  * @param {number} lebar - Lebar ruangan dalam meter
+ * @param {number} tinggi - Tinggi ruangan dalam meter
  * @param {number} okupansi - Jumlah orang yang biasa berada di ruangan
  * @returns {number} Kebutuhan BTU yang dihitung
  */
-export function hitungBTU(panjang, lebar, okupansi) {
-  return (panjang * lebar * 500) + (okupansi * 400);
+export function hitungBTU(panjang, lebar, tinggi, okupansi) {
+  return Math.round((panjang * lebar * tinggi * 200) + (okupansi * 400));
 }
 
 /**

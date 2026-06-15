@@ -145,6 +145,14 @@
               <input type="range" id="range-lebar" min="1" max="50" step="0.5" value="3" class="range-slider" />
             </div>
             <div class="input-group">
+              <label for="input-tinggi">Tinggi Ruangan (m)</label>
+              <div class="input-with-unit">
+                <input type="number" id="input-tinggi" value="3" min="1" max="10" step="0.5" />
+                <span class="unit">m</span>
+              </div>
+              <input type="range" id="range-tinggi" min="1" max="10" step="0.5" value="3" class="range-slider" />
+            </div>
+            <div class="input-group">
               <label for="input-okupansi">Jumlah Orang</label>
               <div class="stepper">
                 <button class="stepper-btn" data-action="decrement" data-target="input-okupansi">−</button>
@@ -153,8 +161,8 @@
               </div>
             </div>
             <div class="input-group">
-              <label>Luas Ruangan</label>
-              <div class="computed-value" id="display-luas">12 m²</div>
+              <label>Luas & Volume</label>
+              <div class="computed-value" id="display-luas">12 m² / 36 m³</div>
             </div>
           </div>
 

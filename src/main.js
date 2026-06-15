@@ -140,11 +140,13 @@ function bindEvents() {
   // --- Room dimension inputs ---
   const panjangInput = document.getElementById('input-panjang');
   const lebarInput = document.getElementById('input-lebar');
+  const tinggiInput = document.getElementById('input-tinggi');
   const okupansiInput = document.getElementById('input-okupansi');
   const rangePanjang = document.getElementById('range-panjang');
   const rangeLebar = document.getElementById('range-lebar');
+  const rangeTinggi = document.getElementById('range-tinggi');
 
-  [panjangInput, lebarInput, okupansiInput].forEach(el => {
+  [panjangInput, lebarInput, tinggiInput, okupansiInput].forEach(el => {
     el.addEventListener('input', updateCalculation);
   });
 
@@ -163,6 +165,14 @@ function bindEvents() {
   });
   lebarInput.addEventListener('input', () => {
     rangeLebar.value = lebarInput.value;
+  });
+
+  rangeTinggi.addEventListener('input', () => {
+    tinggiInput.value = rangeTinggi.value;
+    updateCalculation();
+  });
+  tinggiInput.addEventListener('input', () => {
+    rangeTinggi.value = tinggiInput.value;
   });
 
   // Stepper buttons
@@ -340,19 +350,21 @@ function bindEvents() {
 function updateCalculation() {
   const panjang = parseFloat(document.getElementById('input-panjang').value) || 1;
   const lebar = parseFloat(document.getElementById('input-lebar').value) || 1;
+  const tinggi = parseFloat(document.getElementById('input-tinggi').value) || 3;
   const okupansi = parseInt(document.getElementById('input-okupansi').value) || 1;
 
   const luas = panjang * lebar;
-  const btu = hitungBTU(panjang, lebar, okupansi);
+  const volume = panjang * lebar * tinggi;
+  const btu = hitungBTU(panjang, lebar, tinggi, okupansi);
   const pkInfo = konversiKePK(btu);
 
   state.btu = btu;
   state.pk = pkInfo.pk;
 
-  document.getElementById('display-luas').textContent = formatNum(luas) + ' m²';
+  document.getElementById('display-luas').textContent = formatNum(luas) + ' m² / ' + formatNum(volume) + ' m³';
   document.getElementById('display-btu').textContent = formatNum(btu);
   document.getElementById('display-pk').textContent = pkInfo.pk;
-  document.getElementById('display-beban-ruangan').textContent = formatNum(panjang * lebar * 500) + ' BTU';
+  document.getElementById('display-beban-ruangan').textContent = formatNum(Math.round(volume * 200)) + ' BTU';
   document.getElementById('display-beban-orang').textContent = formatNum(okupansi * 400) + ' BTU';
 }
 
