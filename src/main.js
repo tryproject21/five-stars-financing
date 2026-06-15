@@ -32,6 +32,10 @@ import {
 import { loadDatabaseLampu, getDatabaseLampu, getBrandsLampu, filterByBrandLampu, getLampuById } from './js/database-lampu.js';
 import { estimasiHargaLampu, hitungPenghematanLampu, hitungDampakLingkungan, hitungNPV, hitungIRR, hitungKapasitasLampu } from './js/calculator-lampu.js';
 
+import { loadDatabaseKulkas, getDatabaseKulkas, getBrandsKulkas, filterByBrandKulkas, getKulkasById } from './js/database-kulkas.js';
+import { estimasiHargaKulkas, hitungPenghematanKulkas, hitungDampakLingkunganKulkas } from './js/calculator-kulkas.js';
+import { createKulkasCard } from './js/ui.js';
+
 // ========================
 // STATE
 // ========================
@@ -60,16 +64,29 @@ const stateLampu = {
   tarifListrik: 1444
 };
 
+const stateKulkas = {
+  rekomendasi: [],
+  selectedKulkas: [],
+  currentPage: 1,
+  perPage: 12,
+  biayaLama: 800000,
+  umurEkonomis: 5,
+  bunga: 0.06,
+  tarifListrik: 1444
+};
+
 // ========================
 // INITIALIZATION
 // ========================
 async function init() {
   try {
-    await Promise.all([loadDatabase(), loadDatabaseLampu()]);
+    await Promise.all([loadDatabase(), loadDatabaseLampu(), loadDatabaseKulkas()]);
     const db = getDatabase();
     const brands = getBrands();
     const dbLampu = getDatabaseLampu();
     const brandsLampu = getBrandsLampu();
+    const dbKulkas = getDatabaseKulkas();
+    const brandsKulkas = getBrandsKulkas();
 
     // Update hero stats
     const statTotal = document.getElementById('stat-total');
@@ -120,6 +137,35 @@ async function init() {
 
     populateBrandSelect('select-existing-brand-lampu', brandsLampu);
 
+    // Populate Kulkas UI
+    const statTotalKulkas = document.getElementById('stat-total-kulkas');
+    const statBrandsKulkas = document.getElementById('stat-brands-kulkas');
+    if (statTotalKulkas) animateCounter(statTotalKulkas, dbKulkas.length, 1200);
+    if (statBrandsKulkas) animateCounter(statBrandsKulkas, brandsKulkas.length, 1000);
+
+    const filterBrandKulkas = document.getElementById('filter-brand-kulkas');
+    if (filterBrandKulkas) {
+      brandsKulkas.forEach(b => {
+        const opt = document.createElement('option');
+        opt.value = b;
+        opt.textContent = b;
+        filterBrandKulkas.appendChild(opt);
+      });
+    }
+
+    const filterTypeKulkas = document.getElementById('filter-type-kulkas');
+    if (filterTypeKulkas && dbKulkas.length > 0) {
+      const types = [...new Set(dbKulkas.map(k => k['Tipe']).filter(Boolean))].sort();
+      types.forEach(t => {
+        const opt = document.createElement('option');
+        opt.value = t;
+        opt.textContent = t;
+        filterTypeKulkas.appendChild(opt);
+      });
+    }
+    
+    populateBrandSelect('select-existing-brand-kulkas', brandsKulkas);
+
     // Hide loading screen
     setTimeout(() => {
       document.getElementById('loading-screen').classList.add('hidden');
@@ -131,6 +177,7 @@ async function init() {
     initTabs();
     bindEvents();
     bindEventsLampu();
+    bindEventsKulkas();
     updateCalculation();
 
   } catch (err) {
@@ -179,6 +226,8 @@ function bindEvents() {
         document.getElementById('view-ac').classList.add('active');
       } else if (app === 'lampu') {
         document.getElementById('view-lampu').classList.add('active');
+      } else if (app === 'lemari-pendingin') {
+        document.getElementById('view-lemari-pendingin').classList.add('active');
       } else {
         document.getElementById('view-coming-soon').classList.add('active');
       }
@@ -1277,6 +1326,321 @@ function runInvestmentAnalysisLampu() {
 }
 
 // ========================
+// EVENTS KULKAS
+// ========================
+function bindEventsKulkas() {
+  const toggleExistingKulkas = document.getElementById('toggle-existing-kulkas');
+  if (toggleExistingKulkas) {
+    toggleExistingKulkas.addEventListener('change', () => {
+      const panel = document.getElementById('existing-panel-kulkas');
+      panel.style.display = toggleExistingKulkas.checked ? 'block' : 'none';
+      if (!toggleExistingKulkas.checked) {
+        stateKulkas.biayaLama = 0;
+      }
+    });
+  }
+
+  const brandSelect = document.getElementById('select-existing-brand-kulkas');
+  const modelSelect = document.getElementById('select-existing-model-kulkas');
+
+  if (brandSelect && modelSelect) {
+    brandSelect.addEventListener('change', () => {
+      const brand = brandSelect.value;
+      modelSelect.innerHTML = '<option value="">-- Pilih Model --</option>';
+      document.getElementById('existing-info-kulkas').style.display = 'none';
+
+      if (brand) {
+        const db = getDatabaseKulkas();
+        const models = db.filter(k => k['Merek'] === brand);
+        models.forEach(k => {
+          const opt = document.createElement('option');
+          opt.value = k['No'];
+          const modelName = k['Model'] || '-';
+          opt.textContent = modelName.length > 60 ? modelName.substring(0, 60) + '...' : modelName;
+          modelSelect.appendChild(opt);
+        });
+      }
+    });
+
+    modelSelect.addEventListener('change', () => {
+      const no = modelSelect.value;
+      if (no) {
+        const k = getKulkasById(no);
+        if (k) {
+          const biaya = k['Biaya Listrik Tahunan (Rp)'] || 0;
+          stateKulkas.biayaLama = biaya;
+          document.getElementById('input-biaya-kulkas-lama').value = Math.round(biaya);
+
+          document.getElementById('existing-tipe-kulkas').textContent = k['Tipe'] || '-';
+          document.getElementById('existing-volume-kulkas').textContent = k['Adjusted Volume (liter)*'] + ' L';
+          document.getElementById('existing-daya-kulkas').textContent = k['Daya (watt)'] + ' W';
+          document.getElementById('existing-biaya-kulkas').textContent = new Intl.NumberFormat('id-ID').format(biaya);
+          document.getElementById('existing-info-kulkas').style.display = 'block';
+        }
+      } else {
+        document.getElementById('existing-info-kulkas').style.display = 'none';
+      }
+    });
+  }
+
+  const inputBiayaLama = document.getElementById('input-biaya-kulkas-lama');
+  if (inputBiayaLama) {
+    inputBiayaLama.addEventListener('input', (e) => {
+      stateKulkas.biayaLama = parseFloat(e.target.value) || 0;
+    });
+  }
+
+  ['input-umur-kulkas', 'input-bunga-kulkas', 'input-tarif-kulkas'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.addEventListener('input', (e) => {
+        if (id === 'input-umur-kulkas') stateKulkas.umurEkonomis = parseInt(e.target.value) || 5;
+        if (id === 'input-bunga-kulkas') stateKulkas.bunga = (parseFloat(e.target.value) || 6) / 100;
+        if (id === 'input-tarif-kulkas') stateKulkas.tarifListrik = parseFloat(e.target.value) || 1444;
+      });
+    }
+  });
+
+  const btnCari = document.getElementById('btn-cari-rekomendasi-kulkas');
+  if (btnCari) {
+    btnCari.addEventListener('click', () => {
+      findRecommendationsKulkas();
+      scrollToSection('rekomendasi-kulkas');
+    });
+  }
+
+  ['filter-brand-kulkas', 'filter-type-kulkas', 'filter-rating-kulkas', 'filter-sort-kulkas'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('change', applyFiltersKulkas);
+  });
+
+  const btnCompare = document.getElementById('btn-compare-kulkas');
+  if (btnCompare) btnCompare.addEventListener('click', runInvestmentAnalysisKulkas);
+
+  const btnClear = document.getElementById('btn-clear-compare-kulkas');
+  if (btnClear) btnClear.addEventListener('click', () => {
+    stateKulkas.selectedKulkas = [];
+    updateCompareBarKulkas();
+    renderKulkasGrid();
+    document.getElementById('analysis-active-kulkas').style.display = 'none';
+    document.getElementById('analysis-empty-kulkas').style.display = 'block';
+  });
+}
+
+function findRecommendationsKulkas() {
+  const db = getDatabaseKulkas();
+  stateKulkas.rekomendasi = [...db];
+  stateKulkas.currentPage = 1;
+  stateKulkas.selectedKulkas = [];
+  updateCompareBarKulkas();
+  applyFiltersKulkas();
+}
+
+function applyFiltersKulkas() {
+  let data = [...getDatabaseKulkas()];
+
+  const brand = document.getElementById('filter-brand-kulkas').value;
+  if (brand) data = data.filter(k => k['Merek'] === brand);
+
+  const type = document.getElementById('filter-type-kulkas').value;
+  if (type) data = data.filter(k => k['Tipe'] === type);
+
+  const minRating = parseInt(document.getElementById('filter-rating-kulkas').value);
+  if (minRating) data = data.filter(k => (k['Rating Bintang (1-5)'] || 0) >= minRating);
+
+  const sort = document.getElementById('filter-sort-kulkas').value;
+  data.sort((a, b) => {
+    switch (sort) {
+      case 'rating-desc':
+        return (b['Rating Bintang (1-5)'] || 0) - (a['Rating Bintang (1-5)'] || 0);
+      case 'biaya-asc':
+        return (a['Biaya Listrik Tahunan (Rp)'] || Infinity) - (b['Biaya Listrik Tahunan (Rp)'] || Infinity);
+      case 'volume-desc':
+        return (b['Adjusted Volume (liter)*'] || 0) - (a['Adjusted Volume (liter)*'] || 0);
+      default:
+        return 0;
+    }
+  });
+
+  stateKulkas.rekomendasi = data;
+  stateKulkas.currentPage = 1;
+  document.getElementById('result-count-kulkas').textContent = data.length + ' hasil';
+  renderKulkasGrid();
+}
+
+function renderKulkasGrid() {
+  const grid = document.getElementById('kulkas-grid');
+  const data = stateKulkas.rekomendasi;
+  const start = (stateKulkas.currentPage - 1) * stateKulkas.perPage;
+  const pageData = data.slice(start, start + stateKulkas.perPage);
+
+  if (data.length === 0) {
+    grid.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">🔍</div>
+        <h3>Tidak Ada Hasil</h3>
+        <p>Coba ubah filter pencarian Anda.</p>
+      </div>
+    `;
+    return;
+  }
+
+  const selectedNos = stateKulkas.selectedKulkas.map(k => k['No']);
+  grid.innerHTML = pageData.map((k, i) => {
+    const isSelected = selectedNos.includes(k['No']);
+    return createKulkasCard(k, start + i, isSelected);
+  }).join('');
+
+  grid.querySelectorAll('.btn-compare-kulkas').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleSelectKulkas(btn.dataset.kulkasNo);
+    });
+  });
+
+  requestAnimationFrame(() => {
+    grid.querySelectorAll('.animate-in').forEach((el, i) => {
+      setTimeout(() => el.classList.add('visible'), i * 50);
+    });
+  });
+}
+
+function toggleSelectKulkas(no) {
+  const idx = stateKulkas.selectedKulkas.findIndex(k => String(k['No']) === String(no));
+  if (idx >= 0) {
+    stateKulkas.selectedKulkas.splice(idx, 1);
+  } else {
+    if (stateKulkas.selectedKulkas.length >= 6) {
+      showToast('Maksimal 6 Kulkas untuk perbandingan', 'warning');
+      return;
+    }
+    const k = getKulkasById(no);
+    if (k) stateKulkas.selectedKulkas.push(k);
+  }
+  updateCompareBarKulkas();
+  renderKulkasGrid();
+}
+
+function updateCompareBarKulkas() {
+  const bar = document.getElementById('compare-bar-kulkas');
+  const count = document.getElementById('compare-count-kulkas');
+  if (stateKulkas.selectedKulkas.length > 0) {
+    bar.style.display = 'flex';
+    count.textContent = stateKulkas.selectedKulkas.length;
+  } else {
+    bar.style.display = 'none';
+  }
+}
+
+function runInvestmentAnalysisKulkas() {
+  if (stateKulkas.selectedKulkas.length === 0) {
+    showToast('Pilih minimal 1 Kulkas', 'warning');
+    return;
+  }
+  scrollToSection('analisis-kulkas');
+  document.getElementById('analysis-empty-kulkas').style.display = 'none';
+  document.getElementById('analysis-active-kulkas').style.display = 'block';
+
+  const acNames = [];
+  const npvValues = [];
+  const irrValues = [];
+  const paybackValues = [];
+  const biayaBaruArr = [];
+
+  const cardsHtml = stateKulkas.selectedKulkas.map((kulkas, index) => {
+    const vol = kulkas['Adjusted Volume (liter)*'] || 0;
+    const tipe = kulkas['Tipe'] || '';
+    const harga = estimasiHargaKulkas(vol, tipe);
+    const biayaBaru = kulkas['Biaya Listrik Tahunan (Rp)'] || 0;
+    const hemat = hitungPenghematanKulkas(stateKulkas.biayaLama, biayaBaru);
+
+    const cashFlows = [-harga];
+    for (let y = 0; y < stateKulkas.umurEkonomis; y++) {
+      cashFlows.push(hemat);
+    }
+
+    const { npv } = fullAnalysis(harga, hemat, stateKulkas.umurEkonomis, stateKulkas.bunga);
+    
+    let irr = 0;
+    let paybackPeriod = Infinity;
+
+    if (hemat > 0) {
+      irr = hitungIRR(cashFlows);
+      paybackPeriod = harga / hemat;
+    }
+
+    let cardStatus = 'layak';
+    let keputusan = 'LAYAK (GO)';
+    if (npv < 0 || paybackPeriod > stateKulkas.umurEkonomis) {
+      cardStatus = 'tidak-layak';
+      keputusan = 'TIDAK LAYAK (NO GO)';
+    }
+
+    const npvClass = npv >= 0 ? 'positive' : 'negative';
+    const irrClass = irr > stateKulkas.bunga ? 'positive' : 'negative';
+    const ppClass = paybackPeriod <= stateKulkas.umurEkonomis ? 'positive' : 'negative';
+
+    const name = `Kulkas ${index + 1}`;
+    acNames.push(name);
+    npvValues.push(npv);
+    irrValues.push(irr);
+    paybackValues.push(paybackPeriod === Infinity ? stateKulkas.umurEkonomis * 2 : paybackPeriod);
+    biayaBaruArr.push(biayaBaru);
+
+    return `
+      <div class="analysis-card ${cardStatus} animate-in">
+        <div class="analysis-card-header">
+          <h4 title="${kulkas['Merek']} — ${kulkas['Model'] || '-'}">${name}: ${kulkas['Merek']}</h4>
+          <span class="verdict-badge ${cardStatus}">${keputusan}</span>
+        </div>
+        <div class="analysis-metrics">
+          <div class="analysis-metric">
+            <div class="m-label">Payback Period</div>
+            <div class="m-value ${ppClass}">
+              ${paybackPeriod === Infinity ? '∞' : paybackPeriod.toFixed(1)} thn
+            </div>
+          </div>
+          <div class="analysis-metric">
+            <div class="m-label">NPV</div>
+            <div class="m-value ${npvClass}">
+              ${formatShort(Math.round(npv))}
+            </div>
+          </div>
+          <div class="analysis-metric">
+            <div class="m-label">IRR</div>
+            <div class="m-value ${irrClass}">
+              ${(irr * 100).toFixed(1)}%
+            </div>
+          </div>
+        </div>
+        <div class="analysis-saving">
+          <span>Penghematan / Tahun</span>
+          <span>${hemat > 0 ? new Intl.NumberFormat('id-ID').format(Math.round(hemat)) : 'Tidak ada'}</span>
+        </div>
+        <div class="analysis-saving" style="margin-top:0.35rem;">
+          <span>Investasi Awal</span>
+          <span>${new Intl.NumberFormat('id-ID').format(Math.round(harga))}</span>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  document.getElementById('analysis-cards-kulkas').innerHTML = cardsHtml;
+  
+  createCostComparisonChart('chart-cost-comparison-kulkas', acNames, biayaBaruArr, stateKulkas.biayaLama, 'Biaya Kulkas Baru', 'Biaya Kulkas Lama');
+  createNPVComparisonChart('chart-npv-kulkas', acNames, npvValues);
+  createIRRComparisonChart('chart-irr-kulkas', acNames, irrValues, stateKulkas.bunga);
+  createPaybackChart('chart-payback-kulkas', acNames, paybackValues, stateKulkas.umurEkonomis);
+  
+  requestAnimationFrame(() => {
+    document.querySelectorAll('#analysis-cards-kulkas .animate-in, #analysis-active-kulkas .charts-grid .animate-in').forEach((el, i) => {
+      setTimeout(() => el.classList.add('visible'), i * 100);
+    });
+  });
+}
+
+// ========================
 // START
 // ========================
 document.addEventListener('DOMContentLoaded', init);
+

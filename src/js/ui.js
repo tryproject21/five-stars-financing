@@ -207,6 +207,57 @@ export function createLampuCard(lampu, index, isSelected = false) {
   `;
 }
 
+// Membuat HTML kartu Kulkas
+export function createKulkasCard(kulkas, index, isSelected = false) {
+  const volume = kulkas['Adjusted Volume (liter)*'];
+  const daya = kulkas['Daya (watt)'];
+  const konsumsi = kulkas['Konsumsi Energi Tahunan (kWh)*'];
+  const biaya = kulkas['Biaya Listrik Tahunan (Rp)'];
+  const merek = kulkas['Merek'] || '-';
+  const model = kulkas['Model'] || '-';
+  const tipe = kulkas['Tipe'] || '-';
+  const rating = kulkas['Rating Bintang (1-5)'] || 0;
+  const no = kulkas['No'] || index;
+  
+  return `
+    <div class="ac-card animate-in ${isSelected ? 'selected' : ''}" data-kulkas-no="${no}" data-index="${index}">
+      <div class="ac-card-header">
+        <div class="ac-brand">${merek}</div>
+        <div class="ac-type-badge ${tipe.toLowerCase().includes('dua pintu') ? 'inverter' : 'non-inverter'}">
+          ${tipe}
+        </div>
+      </div>
+      <div class="ac-card-body">
+        <h3 class="ac-model" title="${model}">${model.length > 50 ? model.substring(0, 50) + '...' : model}</h3>
+        ${createStarRating(Math.round(rating))}
+        <div class="ac-specs">
+          <div class="spec">
+            <span class="spec-label">Volume</span>
+            <span class="spec-value">${typeof volume === 'number' ? volume.toLocaleString('id-ID', {maximumFractionDigits: 1}) : volume} L</span>
+          </div>
+          <div class="spec">
+            <span class="spec-label">Daya</span>
+            <span class="spec-value">${typeof daya === 'number' ? daya.toLocaleString('id-ID', {maximumFractionDigits: 1}) : daya} W</span>
+          </div>
+          <div class="spec">
+            <span class="spec-label">Konsumsi Listrik</span>
+            <span class="spec-value">${typeof konsumsi === 'number' ? konsumsi.toLocaleString('id-ID', {maximumFractionDigits: 1}) : konsumsi} kWh</span>
+          </div>
+          <div class="spec">
+            <span class="spec-label">Biaya Listrik/Thn</span>
+            <span class="spec-value biaya">Rp ${typeof biaya === 'number' ? new Intl.NumberFormat('id-ID').format(Math.round(biaya)) : biaya}</span>
+          </div>
+        </div>
+      </div>
+      <div class="ac-card-footer">
+        <button class="btn btn-compare btn-compare-kulkas" data-kulkas-no="${no}">
+          ${isSelected ? '✓ Dipilih' : '+ Bandingkan'}
+        </button>
+      </div>
+    </div>
+  `;
+}
+
 // Memformat angka besar ke bentuk singkat (misal: 1.2 Jt)
 export function formatShort(num) {
   if (num >= 1000000000) return (num / 1000000000).toFixed(1) + ' M';

@@ -808,6 +808,235 @@
       </section>
     </div> <!-- /view-lampu -->
 
+    <div id="view-lemari-pendingin" class="app-view">
+      <!-- HERO SECTION LEMARI PENDINGIN -->
+      <section class="hero-section">
+        <div class="hero-bg">
+          <div class="hero-orb orb-1" style="background:radial-gradient(circle at 50% 50%, rgba(0, 191, 255, 0.4) 0%, transparent 50%)"></div>
+          <div class="hero-orb orb-2" style="background:radial-gradient(circle at 50% 50%, rgba(135, 206, 235, 0.3) 0%, transparent 50%)"></div>
+        </div>
+        <div class="container hero-content">
+          <h1 class="hero-title animate-in">
+            <span class="hero-icon">🧊</span>
+            Pendingin <span class="gradient-text">Efisien</span>
+          </h1>
+          <p class="hero-subtitle animate-in">Sistem Rekomendasi Lemari Pendingin Hemat Energi</p>
+          <div class="hero-stats animate-in">
+            <div class="stat-item">
+              <div class="stat-value" id="stat-total-kulkas">0</div>
+              <div class="stat-label">Data Kulkas</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value" id="stat-brands-kulkas">0</div>
+              <div class="stat-label">Merek</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Kulkas Internal Sub-Nav -->
+      <div class="sub-nav-wrapper">
+        <div class="container sub-nav">
+          <a href="#kalkulasi-kulkas" class="sub-nav-link active" data-section="kalkulasi-kulkas">Kalkulasi</a>
+          <a href="#rekomendasi-kulkas" class="sub-nav-link" data-section="rekomendasi-kulkas">Rekomendasi</a>
+          <a href="#analisis-kulkas" class="sub-nav-link" data-section="analisis-kulkas">Investasi</a>
+        </div>
+      </div>
+
+      <!-- SECTION 1: KALKULASI KULKAS -->
+      <section id="kalkulasi-kulkas" class="section">
+        <div class="container">
+          <div class="section-header animate-in">
+            <span class="section-badge">01</span>
+            <h2 class="section-title">Kalkulasi Penggantian Kulkas</h2>
+            <p class="section-desc">Masukkan detail lemari pendingin lama Anda untuk dicari padanannya</p>
+          </div>
+          <div class="calc-grid">
+            <!-- PANEL: Kulkas Lama -->
+            <div class="glass-card calc-existing-panel animate-in">
+              <h3 class="card-title">🧊 Lemari Pendingin Saat Ini</h3>
+              <div class="input-group">
+                <label class="toggle-label">
+                  <span>Punya kulkas lama untuk diganti?</span>
+                  <label class="switch">
+                    <input type="checkbox" id="toggle-existing-kulkas" checked />
+                    <span class="switch-slider"></span>
+                  </label>
+                </label>
+              </div>
+              <div id="existing-panel-kulkas" class="existing-inputs">
+                <div class="input-group">
+                  <label for="select-existing-brand-kulkas">Merek Kulkas Lama</label>
+                  <select id="select-existing-brand-kulkas" class="select-input">
+                    <option value="">-- Pilih Merek --</option>
+                  </select>
+                </div>
+                <div class="input-group">
+                  <label for="select-existing-model-kulkas">Model Kulkas Lama</label>
+                  <select id="select-existing-model-kulkas" class="select-input">
+                    <option value="">-- Pilih Model --</option>
+                  </select>
+                </div>
+                <div id="existing-info-kulkas" class="existing-info-box" style="display:none;">
+                  <div class="info-row"><span>Tipe:</span><span id="existing-tipe-kulkas">-</span></div>
+                  <div class="info-row"><span>Volume:</span><span id="existing-volume-kulkas">-</span></div>
+                  <div class="info-row"><span>Daya:</span><span id="existing-daya-kulkas">-</span></div>
+                  <div class="info-row"><span>Biaya Listrik/Thn:</span><span id="existing-biaya-kulkas">-</span></div>
+                </div>
+                <div class="input-group" style="margin-top:1rem;">
+                  <label for="input-biaya-kulkas-lama">Atau input manual Biaya Listrik Tahunan (Rp)</label>
+                  <div class="input-with-unit">
+                    <input type="number" id="input-biaya-kulkas-lama" value="800000" min="0" step="50000" />
+                    <span class="unit">Rp</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="glass-card calc-existing-panel animate-in">
+              <h3 class="card-title">📊 Parameter Investasi</h3>
+              <div class="input-group">
+                <label for="input-umur-kulkas">Umur Ekonomis Kulkas (Tahun)</label>
+                <div class="input-with-unit">
+                  <input type="number" id="input-umur-kulkas" value="5" min="1" max="15" />
+                  <span class="unit">Thn</span>
+                </div>
+              </div>
+              <div class="input-group">
+                <label for="input-bunga-kulkas">Suku Bunga Diskonto (%)</label>
+                <div class="input-with-unit">
+                  <input type="number" id="input-bunga-kulkas" value="6" min="0" max="30" step="0.5" />
+                  <span class="unit">%</span>
+                </div>
+              </div>
+              <div class="input-group">
+                <label for="input-tarif-kulkas">Tarif Listrik (Rp/kWh)</label>
+                <div class="input-with-unit">
+                  <input type="number" id="input-tarif-kulkas" value="1444" min="0" step="1" />
+                  <span class="unit">Rp</span>
+                </div>
+              </div>
+              <button id="btn-cari-rekomendasi-kulkas" class="btn btn-primary btn-block">
+                🔍 Cari Rekomendasi Kulkas
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 2: REKOMENDASI KULKAS -->
+      <section id="rekomendasi-kulkas" class="section">
+        <div class="container">
+          <div class="section-header animate-in">
+            <span class="section-badge">02</span>
+            <h2 class="section-title">Rekomendasi Lemari Pendingin</h2>
+            <p class="section-desc">Pilihan kulkas paling hemat energi</p>
+          </div>
+          
+          <div class="filter-bar glass-card animate-in">
+            <div class="filter-group">
+              <label for="filter-brand-kulkas">Merek</label>
+              <select id="filter-brand-kulkas" class="select-input select-sm">
+                <option value="">Semua Merek</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label for="filter-type-kulkas">Tipe</label>
+              <select id="filter-type-kulkas" class="select-input select-sm">
+                <option value="">Semua Tipe</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label for="filter-rating-kulkas">Min Rating</label>
+              <select id="filter-rating-kulkas" class="select-input select-sm">
+                <option value="">Semua</option>
+                <option value="5">⭐⭐⭐⭐⭐</option>
+                <option value="4">⭐⭐⭐⭐+</option>
+                <option value="3">⭐⭐⭐+</option>
+                <option value="2">⭐⭐+</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label for="filter-sort-kulkas">Urutkan</label>
+              <select id="filter-sort-kulkas" class="select-input select-sm">
+                <option value="rating-desc">Rating Tertinggi</option>
+                <option value="biaya-asc">Biaya Operasi Terendah</option>
+                <option value="volume-desc">Volume Terbesar</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <span class="result-count" id="result-count-kulkas">0 hasil</span>
+            </div>
+          </div>
+          
+          <div id="compare-bar-kulkas" class="compare-bar glass-card" style="display:none;">
+            <div class="compare-info">
+              <span>📊</span><span id="compare-count-kulkas">0</span> kulkas dipilih
+            </div>
+            <div class="compare-actions">
+              <button id="btn-compare-kulkas" class="btn btn-primary btn-sm">Bandingkan</button>
+              <button id="btn-clear-compare-kulkas" class="btn btn-outline btn-sm">Hapus</button>
+            </div>
+          </div>
+
+          <div id="kulkas-grid" class="ac-grid">
+            <div class="empty-state">
+              <div class="empty-icon">🔍</div>
+              <h3>Mulai Pencarian</h3>
+              <p>Klik "Cari Rekomendasi Kulkas" untuk melihat daftar lemari pendingin.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 3: ANALISIS KULKAS -->
+      <section id="analisis-kulkas" class="section">
+        <div class="container">
+          <div class="section-header animate-in">
+            <span class="section-badge">03</span>
+            <h2 class="section-title">Investasi</h2>
+            <p class="section-desc">Kelayakan finansial (Cash)</p>
+          </div>
+          
+          <div id="analysis-content-kulkas">
+            <div class="empty-state animate-in" id="analysis-empty-kulkas">
+              <div class="empty-icon">📊</div>
+              <h3>Pilih Kulkas Terlebih Dahulu</h3>
+              <p>Pilih minimal 1 kulkas dari Rekomendasi untuk melihat analisis lengkapnya.</p>
+            </div>
+          </div>
+
+          <div id="analysis-active-kulkas" style="display:none;">
+            <div id="analysis-cards-kulkas" class="analysis-cards-grid"></div>
+
+            <!-- Charts -->
+            <div class="charts-grid">
+              <div class="glass-card chart-card animate-in">
+                <div class="chart-container">
+                  <canvas id="chart-cost-comparison-kulkas"></canvas>
+                </div>
+              </div>
+              <div class="glass-card chart-card animate-in">
+                <div class="chart-container">
+                  <canvas id="chart-npv-kulkas"></canvas>
+                </div>
+              </div>
+              <div class="glass-card chart-card animate-in">
+                <div class="chart-container">
+                  <canvas id="chart-irr-kulkas"></canvas>
+                </div>
+              </div>
+              <div class="glass-card chart-card animate-in">
+                <div class="chart-container">
+                  <canvas id="chart-payback-kulkas"></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div> <!-- /view-lemari-pendingin -->
+
     <div id="view-coming-soon" class="app-view" style="padding: 100px 20px; text-align: center; min-height: 50vh;">
       <div style="font-size: 4rem; margin-bottom: 1rem;">🚧</div>
       <h2 style="font-size: 2rem; color: #fff; margin-bottom: 1rem;">Coming Soon.....</h2>
