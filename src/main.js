@@ -48,6 +48,7 @@ const state = {
 };
 
 const stateLampu = {
+  allRecommendationsLampu: [],
   rekomendasi: [],
   selectedLampu: [],
   currentPage: 1,
@@ -103,6 +104,17 @@ async function init() {
         opt.value = b;
         opt.textContent = b;
         filterBrandLampu.appendChild(opt);
+      });
+    }
+
+    const filterTypeLampu = document.getElementById('filter-type-lampu');
+    if (filterTypeLampu && dbLampu.length > 0) {
+      const types = [...new Set(dbLampu.map(l => l['Tipe'] || l['Jenis']).filter(Boolean))].sort();
+      types.forEach(t => {
+        const opt = document.createElement('option');
+        opt.value = t;
+        opt.textContent = t;
+        filterTypeLampu.appendChild(opt);
       });
     }
 
@@ -903,6 +915,10 @@ function bindEventsLampu() {
   });
 
   document.getElementById('filter-brand-lampu').addEventListener('change', applyFiltersLampu);
+  document.getElementById('filter-type-lampu').addEventListener('change', applyFiltersLampu);
+  document.getElementById('filter-rating-lampu').addEventListener('change', applyFiltersLampu);
+  document.getElementById('filter-sort-lampu').addEventListener('change', applyFiltersLampu);
+
   document.getElementById('btn-compare-lampu').addEventListener('click', runComparisonLampu);
   document.getElementById('btn-clear-compare-lampu').addEventListener('click', clearComparisonLampu);
 
@@ -971,29 +987,68 @@ function bindEventsLampu() {
 
 function findRecommendationsLampu() {
   const db = getDatabaseLampu();
-  // Filter 1-ke-1 (Rekomendasi yang lebih hemat atau efisien)
-  // Sort descending by Efficacy
-  const results = [...db].sort((a, b) => {
-    return (b['Efikasi (Lumen/watt)'] || 0) - (a['Efikasi (Lumen/watt)'] || 0);
-  });
-
-  if (results.length === 0) {
+  stateLampu.allRecommendationsLampu = db;
+  
+  if (db.length === 0) {
     showToast('Tidak ada lampu yang tersedia di database', 'warning');
     stateLampu.rekomendasi = [];
   } else {
-    stateLampu.rekomendasi = results;
-    showToast(`Ditemukan ${results.length} lampu`, 'success');
+    showToast(`Ditemukan ${db.length} lampu`, 'success');
   }
 
   stateLampu.selectedLampu = [];
   updateCompareBarLampu();
+  
+  // Set default sort to "rekomendasi"
+  document.getElementById('filter-sort-lampu').value = 'rekomendasi';
+  
   applyFiltersLampu();
 }
 
 function applyFiltersLampu() {
-  let data = [...stateLampu.rekomendasi];
+  let data = [...stateLampu.allRecommendationsLampu];
+  
+  // 1. Filter Brand
   const brand = document.getElementById('filter-brand-lampu').value;
   if (brand) data = data.filter(l => l['Merek'] === brand);
+
+  // 2. Filter Tipe
+  const tipe = document.getElementById('filter-type-lampu').value;
+  if (tipe) data = data.filter(l => (l['Tipe'] || l['Jenis'] || '').toLowerCase().includes(tipe.toLowerCase()));
+
+  // 3. Filter Min Rating
+  const minRating = parseInt(document.getElementById('filter-rating-lampu').value);
+  if (minRating) data = data.filter(l => Math.round(l['Tingkat Bintang (1-5)'] || 0) >= minRating);
+
+  // 4. Sort
+  const sort = document.getElementById('filter-sort-lampu').value;
+  const targetDaya = stateLampu.dayaLama || 40;
+
+  data.sort((a, b) => {
+    if (sort === 'rekomendasi') {
+      // Prioritas 1: Bintang tertinggi (Prioritas Bintang 5)
+      const starA = Math.round(a['Tingkat Bintang (1-5)'] || 0);
+      const starB = Math.round(b['Tingkat Bintang (1-5)'] || 0);
+      if (starA !== starB) {
+        return starB - starA; // Bintang 5 di atas
+      }
+      
+      // Prioritas 2: Selisih daya terkecil
+      const diffA = Math.abs((a['Daya (Watt)'] || 0) - targetDaya);
+      const diffB = Math.abs((b['Daya (Watt)'] || 0) - targetDaya);
+      return diffA - diffB;
+    } 
+    else if (sort === 'efikasi-desc') {
+      return (b['Efikasi (Lumen/watt)'] || 0) - (a['Efikasi (Lumen/watt)'] || 0);
+    } 
+    else if (sort === 'rating-desc') {
+      return (b['Tingkat Bintang (1-5)'] || 0) - (a['Tingkat Bintang (1-5)'] || 0);
+    } 
+    else if (sort === 'daya-asc') {
+      return (a['Daya (Watt)'] || Infinity) - (b['Daya (Watt)'] || Infinity);
+    }
+    return 0;
+  });
 
   stateLampu.rekomendasi = data;
   document.getElementById('result-count-lampu').textContent = data.length + ' hasil';
@@ -1145,7 +1200,7 @@ function runInvestmentAnalysisLampu() {
             <div class="m-value">${(irr * 100).toFixed(1)}%</div>
           </div>
         </div>
-        <div class="env-impact" style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.1);">
+        <div class="env-impact" style="display: none; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.1);">
           <div style="font-weight:600; margin-bottom: 0.5rem; color: #10b981;">🌱 Dampak Lingkungan (Reduksi per Tahun)</div>
           <div>⚡ Energi: <strong>${Math.round(lingkungan.hematKwh)} kWh</strong></div>
           <div>☁️ Emisi Karbon: <strong>${lingkungan.reduksiCO2.toFixed(1)} kg CO2</strong></div>

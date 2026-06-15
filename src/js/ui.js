@@ -199,7 +199,7 @@ export function createLampuCard(lampu, index, isSelected = false) {
         </div>
       </div>
       <div class="ac-card-footer">
-        <button class="btn btn-compare-lampu" data-lampu-no="${no}">
+        <button class="btn btn-compare btn-compare-lampu" data-lampu-no="${no}">
           ${isSelected ? '✓ Dipilih' : '+ Bandingkan'}
         </button>
       </div>
