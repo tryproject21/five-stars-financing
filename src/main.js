@@ -947,9 +947,13 @@ function bindEventsLampu() {
     const lampu = getLampuById(no);
     if (lampu) {
       infoBox.style.display = 'block';
-      document.getElementById('existing-tipe-lampu').textContent = lampu['Tipe'] || lampu['Famili'] || '-';
-      document.getElementById('existing-daya-lampu').textContent = (lampu['Daya (Watt)'] || 0) + ' Watt';
-      document.getElementById('existing-efikasi-lampu').textContent = (lampu['Efikasi (Lumen/watt)'] || 0) + ' lm/W';
+      const tipeVal = lampu['Tipe'] || lampu['Famili'] || '-';
+      const dayaVal = lampu['Daya (Watt)'] || 0;
+      const efikasiVal = lampu['Efikasi (Lumen/watt)'] || 0;
+
+      document.getElementById('existing-tipe-lampu').textContent = tipeVal;
+      document.getElementById('existing-daya-lampu').textContent = (typeof dayaVal === 'number' ? dayaVal.toLocaleString('id-ID', {maximumFractionDigits: 2}) : dayaVal) + ' Watt';
+      document.getElementById('existing-efikasi-lampu').textContent = (typeof efikasiVal === 'number' ? efikasiVal.toLocaleString('id-ID', {maximumFractionDigits: 1}) : efikasiVal) + ' lm/W';
       document.getElementById('existing-biaya-lampu').textContent = formatRupiah(lampu['Biaya Listrik Tahunan (Rp)'] || 0);
 
       // Auto-fill manual inputs

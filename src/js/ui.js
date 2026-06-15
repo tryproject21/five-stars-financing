@@ -167,6 +167,7 @@ export function createLampuCard(lampu, index, isSelected = false) {
   const biaya = lampu['Biaya Listrik Tahunan (Rp)'];
   const merek = lampu['Merek'] || '-';
   const model = lampu['Model'] || '-';
+  const rating = lampu['Tingkat Bintang (1-5)'] || 0;
   const no = lampu['No'] || index;
   
   return `
@@ -176,18 +177,19 @@ export function createLampuCard(lampu, index, isSelected = false) {
       </div>
       <div class="ac-card-body">
         <h3 class="ac-model" title="${model}">${model.length > 50 ? model.substring(0, 50) + '...' : model}</h3>
+        ${createStarRating(Math.round(rating))}
         <div class="ac-specs">
           <div class="spec">
             <span class="spec-label">Daya</span>
-            <span class="spec-value">${typeof daya === 'number' ? daya : daya} W</span>
+            <span class="spec-value">${typeof daya === 'number' ? daya.toLocaleString('id-ID', {maximumFractionDigits: 2}) : daya} W</span>
           </div>
           <div class="spec">
             <span class="spec-label">Efikasi</span>
-            <span class="spec-value">${typeof efikasi === 'number' ? efikasi.toFixed(1) : efikasi} lm/W</span>
+            <span class="spec-value">${typeof efikasi === 'number' ? efikasi.toLocaleString('id-ID', {maximumFractionDigits: 1}) : efikasi} lm/W</span>
           </div>
           <div class="spec">
             <span class="spec-label">Total Lumen</span>
-            <span class="spec-value">${(daya && efikasi) ? Math.round(daya * efikasi) : '-'} lm</span>
+            <span class="spec-value">${(daya && efikasi) ? Math.round(daya * efikasi).toLocaleString('id-ID') : '-'} lm</span>
           </div>
           <div class="spec">
             <span class="spec-label">Biaya Listrik/Thn</span>
