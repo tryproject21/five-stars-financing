@@ -323,6 +323,7 @@ main {
   gap: 1rem;
   overflow-x: auto;
   white-space: nowrap;
+  justify-content: center;
 }
 
 .sub-nav::-webkit-scrollbar {
