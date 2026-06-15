@@ -171,7 +171,7 @@ export function formatShort(num) {
 // Memperbarui state aktif navigasi berdasarkan posisi scroll
 export function initNavScroll() {
   const sections = document.querySelectorAll('section[id]');
-  const navLinks = document.querySelectorAll('.nav-link');
+  const navLinks = document.querySelectorAll('.sub-nav-link');
   
   window.addEventListener('scroll', () => {
     let current = '';

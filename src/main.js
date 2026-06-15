@@ -111,6 +111,32 @@ function bindEvents() {
     link.addEventListener('click', () => mobileNav.classList.remove('open'));
   });
 
+  // --- Top App Nav ---
+  document.querySelectorAll('.top-nav-link').forEach(link => {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      const app = link.dataset.app;
+      
+      // Update active class on nav links
+      document.querySelectorAll('.top-nav-link').forEach(l => l.classList.remove('active'));
+      document.querySelectorAll(`.top-nav-link[data-app="${app}"]`).forEach(l => l.classList.add('active'));
+      
+      // Switch views
+      document.querySelectorAll('.app-view').forEach(view => {
+        view.classList.remove('active');
+      });
+      
+      if (app === 'ac') {
+        document.getElementById('view-ac').classList.add('active');
+      } else {
+        document.getElementById('view-coming-soon').classList.add('active');
+      }
+      
+      // Close mobile nav if open
+      document.getElementById('mobile-nav').classList.remove('open');
+    });
+  });
+
   // --- Room dimension inputs ---
   const panjangInput = document.getElementById('input-panjang');
   const lebarInput = document.getElementById('input-lebar');

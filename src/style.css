@@ -194,10 +194,23 @@ body {
   background-clip: text;
 }
 
-.nav-links {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  overflow-x: auto;
+  white-space: nowrap;
+  max-width: 70%;
+}
+
+.nav-links::-webkit-scrollbar {
+  height: 4px;
+}
+.nav-links::-webkit-scrollbar-track {
+  background: transparent;
+}
+.nav-links::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 2px;
 }
 
 .nav-link {
@@ -281,6 +294,61 @@ body {
 .mobile-nav-link:hover {
   color: var(--text-primary);
   background: rgba(0, 229, 255, 0.08);
+}
+
+.mobile-nav-link.active {
+  color: var(--accent-cyan);
+}
+
+/* --- Sub Navigation --- */
+.sub-nav-wrapper {
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--glass-border);
+  position: sticky;
+  top: var(--nav-height);
+  z-index: 900;
+  padding: 0.5rem 0;
+}
+
+.sub-nav {
+  display: flex;
+  gap: 1rem;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+.sub-nav::-webkit-scrollbar {
+  display: none; /* Hide scrollbar for cleaner look */
+}
+
+.sub-nav-link {
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.05);
+  transition: var(--transition-fast);
+}
+
+.sub-nav-link:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
+}
+
+.sub-nav-link.active {
+  background: var(--accent-cyan);
+  color: var(--bg-primary);
+  font-weight: 600;
+}
+
+/* --- App View --- */
+.app-view {
+  display: none;
+}
+.app-view.active {
+  display: block;
 }
 
 /* --- Hero Section --- */

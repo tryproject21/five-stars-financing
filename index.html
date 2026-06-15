@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Sistem Rekomendasi AC Pintar — Analisis kapasitas, skema pembiayaan, dan kelayakan investasi AC dengan metrik NPV, IRR, dan Payback Period." />
-  <meta name="keywords" content="AC, pendingin ruangan, rekomendasi AC, NPV, IRR, payback period, skema pembiayaan, inverter" />
+  <meta name="description" content="Five Stars Financing — Sistem Rekomendasi & Kelayakan Investasi Peralatan Elektronik." />
+  <meta name="keywords" content="Five Stars Financing, AC, pendingin ruangan, rekomendasi, skema pembiayaan" />
   <meta name="author" content="financialfivestars" />
-  <title>AC Smart Consultant — Rekomendasi & Analisis Investasi AC</title>
+  <title>Five Stars Financing</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>❄️</text></svg>" />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⭐</text></svg>" />
   <link rel="stylesheet" href="/src/style.css" />
 </head>
 <body>
@@ -30,14 +30,18 @@
   <nav id="main-nav" class="navbar">
     <div class="nav-container">
       <a href="#hero" class="nav-brand">
-        <span class="brand-icon">❄️</span>
-        <span class="brand-text">AC Smart</span>
+        <span class="brand-icon">⭐</span>
+        <span class="brand-text">Five Stars</span>
       </a>
       <div class="nav-links">
-        <a href="#kalkulasi" class="nav-link" data-section="kalkulasi">Kalkulasi</a>
-        <a href="#rekomendasi" class="nav-link" data-section="rekomendasi">Rekomendasi</a>
-        <a href="#pembiayaan" class="nav-link" data-section="pembiayaan">Pembiayaan</a>
-        <a href="#analisis" class="nav-link" data-section="analisis">Analisis</a>
+        <a href="#" class="nav-link top-nav-link active" data-app="ac">AC</a>
+        <a href="#" class="nav-link top-nav-link" data-app="penanak-nasi">Penanak Nasi</a>
+        <a href="#" class="nav-link top-nav-link" data-app="lampu">Lampu</a>
+        <a href="#" class="nav-link top-nav-link" data-app="lemari-pendingin">Lemari Pendingin</a>
+        <a href="#" class="nav-link top-nav-link" data-app="rdc">RDC</a>
+        <a href="#" class="nav-link top-nav-link" data-app="kipas-angin">Kipas Angin</a>
+        <a href="#" class="nav-link top-nav-link" data-app="dispenser">Dispenser</a>
+        <a href="#" class="nav-link top-nav-link" data-app="televisi">Televisi</a>
       </div>
       <button id="mobile-menu-btn" class="mobile-menu-btn" aria-label="Menu">
         <span></span><span></span><span></span>
@@ -47,10 +51,14 @@
 
   <!-- Mobile Nav -->
   <div id="mobile-nav" class="mobile-nav">
-    <a href="#kalkulasi" class="mobile-nav-link">Kalkulasi</a>
-    <a href="#rekomendasi" class="mobile-nav-link">Rekomendasi</a>
-    <a href="#pembiayaan" class="mobile-nav-link">Pembiayaan</a>
-    <a href="#analisis" class="mobile-nav-link">Analisis</a>
+    <a href="#" class="mobile-nav-link top-nav-link active" data-app="ac">AC</a>
+    <a href="#" class="mobile-nav-link top-nav-link" data-app="penanak-nasi">Penanak Nasi</a>
+    <a href="#" class="mobile-nav-link top-nav-link" data-app="lampu">Lampu</a>
+    <a href="#" class="mobile-nav-link top-nav-link" data-app="lemari-pendingin">Lemari Pendingin</a>
+    <a href="#" class="mobile-nav-link top-nav-link" data-app="rdc">RDC</a>
+    <a href="#" class="mobile-nav-link top-nav-link" data-app="kipas-angin">Kipas Angin</a>
+    <a href="#" class="mobile-nav-link top-nav-link" data-app="dispenser">Dispenser</a>
+    <a href="#" class="mobile-nav-link top-nav-link" data-app="televisi">Televisi</a>
   </div>
 
   <main>
@@ -63,15 +71,15 @@
       </div>
       <div class="container hero-content">
         <h1 class="hero-title animate-in">
-          <span class="hero-icon">❄️</span>
-          AC Smart <span class="gradient-text">Consultant</span>
+          <span class="hero-icon">⭐</span>
+          Five Stars <span class="gradient-text">Financing</span>
         </h1>
         <p class="hero-subtitle animate-in">
-          Sistem Rekomendasi & Kelayakan Investasi Pendingin Ruangan
+          Sistem Rekomendasi & Kelayakan Investasi Peralatan Elektronik
         </p>
         <p class="hero-desc animate-in">
-          Analisis kapasitas AC, skema pembiayaan, dan metrik Capital Budgeting 
-          (NPV, IRR, Payback Period) dari <strong id="db-count">1800+</strong> data perangkat AC terdaftar.
+          Pilih kategori peralatan di atas untuk melihat analisis efisiensi, skema pembiayaan, 
+          serta metrik investasi lengkap.
         </p>
         <div class="hero-actions animate-in">
           <a href="#kalkulasi" class="btn btn-primary btn-lg">
@@ -97,6 +105,17 @@
         </div>
       </div>
     </section>
+
+    <div id="view-ac" class="app-view active">
+      <!-- AC Internal Sub-Nav -->
+      <div class="sub-nav-wrapper">
+        <div class="container sub-nav">
+          <a href="#kalkulasi" class="sub-nav-link active" data-section="kalkulasi">Kalkulasi</a>
+          <a href="#rekomendasi" class="sub-nav-link" data-section="rekomendasi">Rekomendasi</a>
+          <a href="#pembiayaan" class="sub-nav-link" data-section="pembiayaan">Pembiayaan</a>
+          <a href="#analisis" class="sub-nav-link" data-section="analisis">Analisis</a>
+        </div>
+      </div>
 
     <!-- SECTION 1: KALKULASI BTU -->
     <section id="kalkulasi" class="section">
@@ -501,6 +520,14 @@
         </div>
       </div>
     </section>
+    </div> <!-- /view-ac -->
+
+    <div id="view-coming-soon" class="app-view" style="display:none; padding: 100px 20px; text-align: center; min-height: 50vh;">
+      <div style="font-size: 4rem; margin-bottom: 1rem;">🚧</div>
+      <h2 style="font-size: 2rem; color: #fff; margin-bottom: 1rem;">Coming Soon.....</h2>
+      <p style="color: var(--text-secondary); max-width: 500px; margin: 0 auto;">Fitur untuk peralatan ini sedang dalam tahap pengembangan. Nantikan update kami selanjutnya!</p>
+    </div>
+
   </main>
 
   <!-- Footer -->
@@ -508,8 +535,8 @@
     <div class="container">
       <div class="footer-content">
         <div class="footer-brand">
-          <span>❄️ AC Smart Consultant</span>
-          <p>Sistem Rekomendasi & Analisis Investasi AC</p>
+          <span>⭐ Five Stars Financing</span>
+          <p>Sistem Rekomendasi & Analisis Investasi Peralatan Elektronik</p>
         </div>
         <div class="footer-info">
           <p>Database: EBTKE — Kementerian ESDM RI</p>
