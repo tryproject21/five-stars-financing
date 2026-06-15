@@ -160,6 +160,50 @@ export function createACCard(ac, index, isSelected = false) {
   `;
 }
 
+// Membuat HTML kartu Lampu
+export function createLampuCard(lampu, index, isSelected = false) {
+  const daya = lampu['Daya (Watt)'];
+  const efikasi = lampu['Efikasi (Lumen/watt)'];
+  const biaya = lampu['Biaya Listrik Tahunan (Rp)'];
+  const merek = lampu['Merek'] || '-';
+  const model = lampu['Model'] || '-';
+  const no = lampu['No'] || index;
+  
+  return `
+    <div class="ac-card animate-in ${isSelected ? 'selected' : ''}" data-lampu-no="${no}" data-index="${index}">
+      <div class="ac-card-header">
+        <div class="ac-brand">${merek}</div>
+      </div>
+      <div class="ac-card-body">
+        <h3 class="ac-model" title="${model}">${model.length > 50 ? model.substring(0, 50) + '...' : model}</h3>
+        <div class="ac-specs">
+          <div class="spec">
+            <span class="spec-label">Daya</span>
+            <span class="spec-value">${typeof daya === 'number' ? daya : daya} W</span>
+          </div>
+          <div class="spec">
+            <span class="spec-label">Efikasi</span>
+            <span class="spec-value">${typeof efikasi === 'number' ? efikasi.toFixed(1) : efikasi} lm/W</span>
+          </div>
+          <div class="spec">
+            <span class="spec-label">Total Lumen</span>
+            <span class="spec-value">${(daya && efikasi) ? Math.round(daya * efikasi) : '-'} lm</span>
+          </div>
+          <div class="spec">
+            <span class="spec-label">Biaya Listrik/Thn</span>
+            <span class="spec-value biaya">Rp ${typeof biaya === 'number' ? new Intl.NumberFormat('id-ID').format(Math.round(biaya)) : biaya}</span>
+          </div>
+        </div>
+      </div>
+      <div class="ac-card-footer">
+        <button class="btn btn-compare-lampu" data-lampu-no="${no}">
+          ${isSelected ? '✓ Dipilih' : '+ Bandingkan'}
+        </button>
+      </div>
+    </div>
+  `;
+}
+
 // Memformat angka besar ke bentuk singkat (misal: 1.2 Jt)
 export function formatShort(num) {
   if (num >= 1000000000) return (num / 1000000000).toFixed(1) + ' M';

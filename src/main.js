@@ -25,8 +25,12 @@ import {
   scrollToSection,
   initTabs,
   initNavScroll,
-  formatShort
+  formatShort,
+  createLampuCard
 } from './js/ui.js';
+
+import { loadDatabaseLampu, getDatabaseLampu, getBrandsLampu, filterByBrandLampu, getLampuById } from './js/database-lampu.js';
+import { estimasiHargaLampu, hitungPenghematanLampu, hitungDampakLingkungan, hitungNPV, hitungIRR } from './js/calculator-lampu.js';
 
 // ========================
 // STATE
@@ -43,14 +47,28 @@ const state = {
   hasExisting: false,
 };
 
+const stateLampu = {
+  rekomendasi: [],
+  selectedLampu: [],
+  currentPage: 1,
+  perPage: 12,
+  dayaLama: 40,
+  biayaLama: 150000,
+  umurEkonomis: 3,
+  bunga: 0.06,
+  tarifListrik: 1444
+};
+
 // ========================
 // INITIALIZATION
 // ========================
 async function init() {
   try {
-    await loadDatabase();
+    await Promise.all([loadDatabase(), loadDatabaseLampu()]);
     const db = getDatabase();
     const brands = getBrands();
+    const dbLampu = getDatabaseLampu();
+    const brandsLampu = getBrandsLampu();
 
     // Update hero stats
     const statTotal = document.getElementById('stat-total');
@@ -68,9 +86,25 @@ async function init() {
     animateCounter(statInverter, inverterCount, 1100);
     if (dbCount) dbCount.textContent = db.length + '+';
 
+    // Update hero stats lampu
+    const statTotalLampu = document.getElementById('stat-total-lampu');
+    const statBrandsLampu = document.getElementById('stat-brands-lampu');
+    if (statTotalLampu) animateCounter(statTotalLampu, dbLampu.length, 1200);
+    if (statBrandsLampu) animateCounter(statBrandsLampu, brandsLampu.length, 1000);
+
     // Populate brand selects
     populateBrandSelect('select-existing-brand', brands);
     populateBrandSelect('filter-brand', brands);
+    
+    const filterBrandLampu = document.getElementById('filter-brand-lampu');
+    if (filterBrandLampu) {
+      brandsLampu.forEach(b => {
+        const opt = document.createElement('option');
+        opt.value = b;
+        opt.textContent = b;
+        filterBrandLampu.appendChild(opt);
+      });
+    }
 
     // Hide loading screen
     setTimeout(() => {
@@ -82,6 +116,7 @@ async function init() {
     initNavScroll();
     initTabs();
     bindEvents();
+    bindEventsLampu();
     updateCalculation();
 
   } catch (err) {
@@ -128,6 +163,8 @@ function bindEvents() {
       
       if (app === 'ac') {
         document.getElementById('view-ac').classList.add('active');
+      } else if (app === 'lampu') {
+        document.getElementById('view-lampu').classList.add('active');
       } else {
         document.getElementById('view-coming-soon').classList.add('active');
       }
@@ -834,6 +871,232 @@ function populateBrandSelect(selectId, brands) {
     opt.value = brand;
     opt.textContent = brand;
     select.appendChild(opt);
+  });
+}
+
+// ========================
+// LAMPU LOGIC
+// ========================
+
+function bindEventsLampu() {
+  document.getElementById('input-daya-lampu').addEventListener('input', (e) => {
+    stateLampu.dayaLama = parseFloat(e.target.value) || 0;
+  });
+  document.getElementById('input-biaya-lampu-lama').addEventListener('input', (e) => {
+    stateLampu.biayaLama = parseFloat(e.target.value) || 0;
+  });
+  document.getElementById('input-umur-lampu').addEventListener('input', (e) => {
+    stateLampu.umurEkonomis = parseFloat(e.target.value) || 3;
+  });
+  document.getElementById('input-bunga-lampu').addEventListener('input', (e) => {
+    stateLampu.bunga = (parseFloat(e.target.value) || 0) / 100;
+  });
+  document.getElementById('input-tarif-lampu').addEventListener('input', (e) => {
+    stateLampu.tarifListrik = parseFloat(e.target.value) || 1444;
+  });
+
+  document.getElementById('btn-cari-rekomendasi-lampu').addEventListener('click', () => {
+    findRecommendationsLampu();
+    scrollToSection('rekomendasi-lampu');
+  });
+
+  document.getElementById('filter-brand-lampu').addEventListener('change', applyFiltersLampu);
+  document.getElementById('btn-compare-lampu').addEventListener('click', runComparisonLampu);
+  document.getElementById('btn-clear-compare-lampu').addEventListener('click', clearComparisonLampu);
+}
+
+function findRecommendationsLampu() {
+  const db = getDatabaseLampu();
+  // Filter 1-ke-1 (Rekomendasi yang lebih hemat atau efisien)
+  // Sort descending by Efficacy
+  const results = [...db].sort((a, b) => {
+    return (b['Efikasi (Lumen/watt)'] || 0) - (a['Efikasi (Lumen/watt)'] || 0);
+  });
+
+  if (results.length === 0) {
+    showToast('Tidak ada lampu yang tersedia di database', 'warning');
+    stateLampu.rekomendasi = [];
+  } else {
+    stateLampu.rekomendasi = results;
+    showToast(`Ditemukan ${results.length} lampu`, 'success');
+  }
+
+  stateLampu.selectedLampu = [];
+  updateCompareBarLampu();
+  applyFiltersLampu();
+}
+
+function applyFiltersLampu() {
+  let data = [...stateLampu.rekomendasi];
+  const brand = document.getElementById('filter-brand-lampu').value;
+  if (brand) data = data.filter(l => l['Merek'] === brand);
+
+  stateLampu.rekomendasi = data;
+  document.getElementById('result-count-lampu').textContent = data.length + ' hasil';
+  renderLampuGrid();
+}
+
+function renderLampuGrid() {
+  const grid = document.getElementById('lampu-grid');
+  const data = stateLampu.rekomendasi.slice(0, 50); // Show max 50 for simplicity
+
+  if (data.length === 0) {
+    grid.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">🔍</div>
+        <h3>Tidak Ada Hasil</h3>
+        <p>Coba ubah filter pencarian Anda.</p>
+      </div>
+    `;
+    return;
+  }
+
+  const selectedNos = stateLampu.selectedLampu.map(l => l['No']);
+  grid.innerHTML = data.map((lampu, i) => {
+    const isSelected = selectedNos.includes(lampu['No']);
+    return createLampuCard(lampu, i, isSelected);
+  }).join('');
+
+  grid.querySelectorAll('.btn-compare-lampu').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const no = btn.dataset.lampuNo;
+      toggleSelectLampu(no);
+    });
+  });
+  
+  // Animate new cards
+  requestAnimationFrame(() => {
+    grid.querySelectorAll('.animate-in').forEach((el, i) => {
+      setTimeout(() => el.classList.add('visible'), i * 50);
+    });
+  });
+}
+
+function toggleSelectLampu(no) {
+  const idx = stateLampu.selectedLampu.findIndex(l => String(l['No']) === String(no));
+  if (idx >= 0) {
+    stateLampu.selectedLampu.splice(idx, 1);
+  } else {
+    if (stateLampu.selectedLampu.length >= 4) {
+      showToast('Maksimal 4 lampu untuk analisis', 'warning');
+      return;
+    }
+    const lampu = getLampuById(no);
+    if (lampu) stateLampu.selectedLampu.push(lampu);
+  }
+  updateCompareBarLampu();
+  renderLampuGrid();
+}
+
+function updateCompareBarLampu() {
+  const bar = document.getElementById('compare-bar-lampu');
+  const count = document.getElementById('compare-count-lampu');
+  if (stateLampu.selectedLampu.length > 0) {
+    bar.style.display = 'flex';
+    count.textContent = stateLampu.selectedLampu.length;
+  } else {
+    bar.style.display = 'none';
+  }
+}
+
+function clearComparisonLampu() {
+  stateLampu.selectedLampu = [];
+  updateCompareBarLampu();
+  renderLampuGrid();
+
+  document.getElementById('analysis-active-lampu').style.display = 'none';
+  document.getElementById('analysis-content-lampu').style.display = 'block';
+}
+
+function runComparisonLampu() {
+  if (stateLampu.selectedLampu.length < 1) {
+    showToast('Pilih minimal 1 lampu untuk dianalisis', 'warning');
+    return;
+  }
+
+  document.getElementById('analysis-content-lampu').style.display = 'none';
+  document.getElementById('analysis-active-lampu').style.display = 'block';
+
+  runInvestmentAnalysisLampu();
+  scrollToSection('analisis-lampu');
+  showToast('Analisis lampu siap!', 'success');
+}
+
+function runInvestmentAnalysisLampu() {
+  const cardsHtml = stateLampu.selectedLampu.map(lampu => {
+    const dayaLampu = lampu['Daya (Watt)'] || 0;
+    const biayaBaru = lampu['Biaya Listrik Tahunan (Rp)'] || 0;
+    const harga = estimasiHargaLampu(dayaLampu);
+    
+    const hemat = hitungPenghematanLampu(stateLampu.biayaLama, biayaBaru);
+    const lingkungan = hitungDampakLingkungan(hemat, stateLampu.tarifListrik);
+
+    let cashFlows = [-harga];
+    for(let i = 0; i < stateLampu.umurEkonomis; i++){
+      cashFlows.push(hemat);
+    }
+
+    const npv = hitungNPV(stateLampu.bunga, cashFlows);
+    let irr = 0;
+    let paybackPeriod = Infinity;
+
+    if (hemat > 0) {
+      irr = hitungIRR(cashFlows);
+      paybackPeriod = harga / hemat;
+    }
+
+    let status = 'LAYAK';
+    let statusClass = 'success';
+    if (npv < 0 || paybackPeriod > stateLampu.umurEkonomis) {
+      status = 'TIDAK LAYAK';
+      statusClass = 'danger';
+    }
+
+    return `
+      <div class="glass-card analysis-card animate-in">
+        <div class="analysis-card-header">
+          <h4>${lampu['Merek']} — ${lampu['Model'] || '-'}</h4>
+          <span class="verdict-badge ${statusClass}">${status}</span>
+        </div>
+        <div class="analysis-metrics">
+          <div class="analysis-metric">
+            <div class="m-label">Investasi</div>
+            <div class="m-value">${formatShort(harga)}</div>
+          </div>
+          <div class="analysis-metric">
+            <div class="m-label">Penghematan / Thn</div>
+            <div class="m-value ${hemat > 0 ? 'success' : ''}">${formatShort(Math.round(hemat))}</div>
+          </div>
+          <div class="analysis-metric">
+            <div class="m-label">Simple Payback</div>
+            <div class="m-value">${paybackPeriod === Infinity ? '∞' : paybackPeriod.toFixed(1)} thn</div>
+          </div>
+          <div class="analysis-metric">
+            <div class="m-label">NPV</div>
+            <div class="m-value">${formatShort(Math.round(npv))}</div>
+          </div>
+          <div class="analysis-metric">
+            <div class="m-label">IRR</div>
+            <div class="m-value">${(irr * 100).toFixed(1)}%</div>
+          </div>
+        </div>
+        <div class="env-impact" style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.1);">
+          <div style="font-weight:600; margin-bottom: 0.5rem; color: #10b981;">🌱 Dampak Lingkungan (Reduksi per Tahun)</div>
+          <div>⚡ Energi: <strong>${Math.round(lingkungan.hematKwh)} kWh</strong></div>
+          <div>☁️ Emisi Karbon: <strong>${lingkungan.reduksiCO2.toFixed(1)} kg CO2</strong></div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  document.getElementById('analysis-cards-lampu').innerHTML = cardsHtml;
+  
+  // Animate cards
+  requestAnimationFrame(() => {
+    document.querySelectorAll('#analysis-cards-lampu .animate-in').forEach((el, i) => {
+      setTimeout(() => el.classList.add('visible'), i * 100);
+    });
   });
 }
 
