@@ -1422,9 +1422,74 @@ function bindEventsKulkas() {
     stateKulkas.selectedKulkas = [];
     updateCompareBarKulkas();
     renderKulkasGrid();
+    updateFinancingSectionKulkas();
     document.getElementById('analysis-active-kulkas').style.display = 'none';
     document.getElementById('analysis-empty-kulkas').style.display = 'block';
   });
+
+  // --- Financing controls Kulkas ---
+  document.querySelectorAll('#view-lemari-pendingin .tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const tabGroup = btn.closest('.tab-group');
+      const targetId = btn.dataset.tab;
+      if (!targetId.includes('kulkas')) return;
+      tabGroup.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      tabGroup.querySelectorAll('.tab-content').forEach(c => {
+        c.classList.remove('active');
+        c.style.display = 'none';
+      });
+      btn.classList.add('active');
+      const content = document.getElementById(targetId);
+      if (content) {
+        content.style.display = 'block';
+        requestAnimationFrame(() => content.classList.add('active'));
+      }
+    });
+  });
+
+  document.querySelectorAll('.tenor-btn-kulkas').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tenor-btn-kulkas').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('input-tenor-kulkas').value = btn.dataset.tenor;
+    });
+  });
+
+  const dpInputKulkas = document.getElementById('input-dp-kulkas');
+  const dpRangeKulkas = document.getElementById('range-dp-kulkas');
+  if (dpInputKulkas && dpRangeKulkas) {
+    dpRangeKulkas.addEventListener('input', () => { dpInputKulkas.value = dpRangeKulkas.value; });
+    dpInputKulkas.addEventListener('input', () => { dpRangeKulkas.value = dpInputKulkas.value; });
+  }
+
+  const financeSelectKulkas = document.getElementById('finance-kulkas-select');
+  if (financeSelectKulkas) {
+    financeSelectKulkas.addEventListener('change', (e) => {
+      const idx = parseInt(e.target.value);
+      if (!isNaN(idx) && stateKulkas.selectedKulkas[idx]) {
+        showFinanceKulkasInfo(stateKulkas.selectedKulkas[idx]);
+      } else {
+        document.getElementById('finance-kulkas-info').style.display = 'none';
+      }
+    });
+  }
+
+  const btnHitungKreditKulkas = document.getElementById('btn-hitung-kredit-kulkas');
+  if (btnHitungKreditKulkas) btnHitungKreditKulkas.addEventListener('click', calculateCreditKulkas);
+
+  const btnToggleAmortisasiKulkas = document.getElementById('btn-toggle-amortisasi-kulkas');
+  if (btnToggleAmortisasiKulkas) {
+    btnToggleAmortisasiKulkas.addEventListener('click', () => {
+      const wrapper = document.getElementById('amortisasi-wrapper-kulkas');
+      if (wrapper.style.display === 'none') {
+        wrapper.style.display = 'block';
+        btnToggleAmortisasiKulkas.textContent = 'Sembunyikan';
+      } else {
+        wrapper.style.display = 'none';
+        btnToggleAmortisasiKulkas.textContent = 'Tampilkan';
+      }
+    });
+  }
 }
 
 function findRecommendationsKulkas() {
@@ -1519,6 +1584,7 @@ function toggleSelectKulkas(no) {
   }
   updateCompareBarKulkas();
   renderKulkasGrid();
+  updateFinancingSectionKulkas();
 }
 
 function updateCompareBarKulkas() {
@@ -1530,6 +1596,108 @@ function updateCompareBarKulkas() {
   } else {
     bar.style.display = 'none';
   }
+}
+
+function updateFinancingSectionKulkas() {
+  const content = document.getElementById('financing-content-kulkas');
+  const active = document.getElementById('financing-active-kulkas');
+  if (!content || !active) return;
+
+  if (stateKulkas.selectedKulkas.length === 0) {
+    content.style.display = 'block';
+    active.style.display = 'none';
+    return;
+  }
+
+  content.style.display = 'none';
+  active.style.display = 'block';
+
+  const select = document.getElementById('finance-kulkas-select');
+  select.innerHTML = '<option value="">-- Pilih Kulkas --</option>';
+  stateKulkas.selectedKulkas.forEach((k, i) => {
+    const opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = `${k['Merek']} - ${(k['Model'] || '-').substring(0, 50)}`;
+    select.appendChild(opt);
+  });
+
+  if (stateKulkas.selectedKulkas.length > 0) {
+    select.value = '0';
+    showFinanceKulkasInfo(stateKulkas.selectedKulkas[0]);
+  }
+}
+
+function showFinanceKulkasInfo(kulkas) {
+  const vol = kulkas['Adjusted Volume (liter)*'] || 0;
+  const tipe = kulkas['Tipe'] || '-';
+  const harga = estimasiHargaKulkas(vol, tipe);
+
+  const infoDiv = document.getElementById('finance-kulkas-info');
+  infoDiv.style.display = 'block';
+  infoDiv.innerHTML = `
+    <div class="info-row"><span>Merek:</span><span>${kulkas['Merek']}</span></div>
+    <div class="info-row"><span>Tipe:</span><span>${tipe}</span></div>
+    <div class="info-row"><span>Volume:</span><span>${vol} L</span></div>
+    <div class="info-row"><span>Estimasi Harga:</span><span>${formatRupiah(harga)}</span></div>
+  `;
+
+  const cashPrice = document.getElementById('cash-price-kulkas');
+  if (cashPrice) cashPrice.textContent = formatRupiah(harga);
+
+  const creditResults = document.getElementById('credit-results-kulkas');
+  if (creditResults) creditResults.style.display = 'none';
+}
+
+function calculateCreditKulkas() {
+  const selectEl = document.getElementById('finance-kulkas-select');
+  const idx = parseInt(selectEl.value);
+  if (isNaN(idx) || !stateKulkas.selectedKulkas[idx]) {
+    showToast('Pilih Kulkas terlebih dahulu', 'warning');
+    return;
+  }
+
+  const kulkas = stateKulkas.selectedKulkas[idx];
+  const vol = kulkas['Adjusted Volume (liter)*'] || 0;
+  const tipe = kulkas['Tipe'] || '-';
+  const harga = estimasiHargaKulkas(vol, tipe);
+
+  const dpPersen = parseFloat(document.getElementById('input-dp-kulkas').value) || 0;
+  const bunga = parseFloat(document.getElementById('input-bunga-kredit-kulkas').value) || 0;
+  const tenor = parseInt(document.getElementById('input-tenor-kulkas').value) || 18;
+
+  const result = hitungCicilanAnuitas(harga, dpPersen, bunga, tenor);
+  const amortisasi = generateAmortisasi(harga, dpPersen, bunga, tenor);
+
+  const creditResults = document.getElementById('credit-results-kulkas');
+  if (creditResults) creditResults.style.display = 'block';
+  
+  document.getElementById('credit-dp-kulkas').textContent = formatRupiah(result.dp);
+  document.getElementById('credit-cicilan-kulkas').textContent = formatRupiah(result.cicilanPerBulan);
+  document.getElementById('credit-total-kulkas').textContent = formatRupiah(result.totalPembayaran);
+  document.getElementById('credit-bunga-kulkas').textContent = formatRupiah(result.bungaTotal);
+
+  createFinancingPieChart('chart-financing-pie-kulkas', result.dp, result.pokokPinjaman, result.bungaTotal);
+
+  const tbody = document.querySelector('#table-amortisasi-kulkas tbody');
+  if (tbody) {
+    tbody.innerHTML = amortisasi.map(row => `
+      <tr>
+        <td>${row.bulan}</td>
+        <td>${formatRupiah(row.cicilan)}</td>
+        <td>${formatRupiah(row.pokok)}</td>
+        <td>${formatRupiah(row.bunga)}</td>
+        <td>${formatRupiah(row.sisaPinjaman)}</td>
+      </tr>
+    `).join('');
+  }
+
+  requestAnimationFrame(() => {
+    document.querySelectorAll('#credit-results-kulkas .animate-in').forEach((el, i) => {
+      setTimeout(() => el.classList.add('visible'), i * 100);
+    });
+  });
+
+  showToast('Perhitungan kredit kulkas selesai', 'success');
 }
 
 function runInvestmentAnalysisKulkas() {

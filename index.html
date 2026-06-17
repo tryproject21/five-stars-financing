@@ -839,6 +839,7 @@
         <div class="container sub-nav">
           <a href="#kalkulasi-kulkas" class="sub-nav-link active" data-section="kalkulasi-kulkas">Kalkulasi</a>
           <a href="#rekomendasi-kulkas" class="sub-nav-link" data-section="rekomendasi-kulkas">Rekomendasi</a>
+          <a href="#pembiayaan-kulkas" class="sub-nav-link" data-section="pembiayaan-kulkas">Pembiayaan</a>
           <a href="#analisis-kulkas" class="sub-nav-link" data-section="analisis-kulkas">Investasi</a>
         </div>
       </div>
@@ -989,11 +990,153 @@
         </div>
       </section>
 
-      <!-- SECTION 3: ANALISIS KULKAS -->
-      <section id="analisis-kulkas" class="section">
+      <!-- SECTION 3: PEMBIAYAAN KULKAS -->
+      <section id="pembiayaan-kulkas" class="section">
         <div class="container">
           <div class="section-header animate-in">
             <span class="section-badge">03</span>
+            <h2 class="section-title">Skema Pembiayaan</h2>
+            <p class="section-desc">Simulasi pembelian cash atau kredit untuk Kulkas pilihan Anda</p>
+          </div>
+
+          <div id="financing-content-kulkas">
+            <div class="empty-state animate-in">
+              <div class="empty-icon">💰</div>
+              <h3>Pilih Kulkas Terlebih Dahulu</h3>
+              <p>Klik "Bandingkan" pada satu atau lebih Kulkas di bagian Rekomendasi untuk melihat skema pembiayaan.</p>
+            </div>
+          </div>
+
+          <div id="financing-active-kulkas" style="display:none;">
+            <div class="finance-grid">
+              <!-- Kulkas Selection for Financing -->
+              <div class="glass-card animate-in">
+                <h3 class="card-title">🎯 Kulkas Dipilih</h3>
+                <select id="finance-kulkas-select" class="select-input">
+                  <option value="">-- Pilih Kulkas --</option>
+                </select>
+                <div id="finance-kulkas-info" class="finance-ac-info" style="display:none;"></div>
+              </div>
+
+              <!-- Financing Mode -->
+              <div class="glass-card animate-in">
+                <h3 class="card-title">💳 Mode Pembayaran</h3>
+                <div class="tab-group">
+                  <div class="tab-bar">
+                    <button class="tab-btn active" data-tab="tab-cash-kulkas">Cash</button>
+                    <button class="tab-btn" data-tab="tab-credit-kulkas">Kredit</button>
+                  </div>
+                  
+                  <div id="tab-cash-kulkas" class="tab-content active">
+                    <div class="cash-summary">
+                      <div class="big-price">
+                        <span class="price-label">Total Harga</span>
+                        <span class="price-value" id="cash-price-kulkas">Rp 0</span>
+                      </div>
+                      <p class="price-note">*Harga estimasi berdasarkan volume dan pintu kulkas</p>
+                    </div>
+                  </div>
+
+                  <div id="tab-credit-kulkas" class="tab-content" style="display:none;">
+                    <div class="credit-inputs">
+                      <div class="input-group">
+                        <label for="input-dp-kulkas">Uang Muka / DP (%)</label>
+                        <div class="input-with-unit">
+                          <input type="number" id="input-dp-kulkas" value="20" min="0" max="100" step="5" />
+                          <span class="unit">%</span>
+                        </div>
+                        <input type="range" id="range-dp-kulkas" min="0" max="100" step="5" value="20" class="range-slider" />
+                      </div>
+                      <div class="input-group">
+                        <label for="input-bunga-kredit-kulkas">Suku Bunga per Tahun (%)</label>
+                        <div class="input-with-unit">
+                          <input type="number" id="input-bunga-kredit-kulkas" value="12" min="0" max="50" step="0.5" />
+                          <span class="unit">%</span>
+                        </div>
+                      </div>
+                      <div class="input-group">
+                        <label for="input-tenor-kulkas">Tenor Cicilan (Bulan)</label>
+                        <div class="tenor-options">
+                          <button class="tenor-btn-kulkas" data-tenor="6">6 bln</button>
+                          <button class="tenor-btn-kulkas" data-tenor="12">12 bln</button>
+                          <button class="tenor-btn-kulkas active" data-tenor="18">18 bln</button>
+                          <button class="tenor-btn-kulkas" data-tenor="24">24 bln</button>
+                          <button class="tenor-btn-kulkas" data-tenor="36">36 bln</button>
+                        </div>
+                        <input type="number" id="input-tenor-kulkas" value="18" min="1" max="60" class="hidden" />
+                      </div>
+                      <button id="btn-hitung-kredit-kulkas" class="btn btn-primary btn-block">Hitung Cicilan</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Credit Results -->
+            <div id="credit-results-kulkas" class="credit-results" style="display:none;">
+              <div class="credit-summary-grid animate-in">
+                <div class="glass-card metric-card">
+                  <div class="metric-icon">💵</div>
+                  <div class="metric-label">Uang Muka</div>
+                  <div class="metric-value" id="credit-dp-kulkas">Rp 0</div>
+                </div>
+                <div class="glass-card metric-card">
+                  <div class="metric-icon">📅</div>
+                  <div class="metric-label">Cicilan / Bulan</div>
+                  <div class="metric-value highlight" id="credit-cicilan-kulkas">Rp 0</div>
+                </div>
+                <div class="glass-card metric-card">
+                  <div class="metric-icon">💰</div>
+                  <div class="metric-label">Total Pembayaran</div>
+                  <div class="metric-value" id="credit-total-kulkas">Rp 0</div>
+                </div>
+                <div class="glass-card metric-card">
+                  <div class="metric-icon">📈</div>
+                  <div class="metric-label">Total Bunga</div>
+                  <div class="metric-value warning" id="credit-bunga-kulkas">Rp 0</div>
+                </div>
+              </div>
+
+              <!-- Pie Chart -->
+              <div class="glass-card chart-card animate-in">
+                <div class="chart-container">
+                  <canvas id="chart-financing-pie-kulkas"></canvas>
+                </div>
+              </div>
+
+              <!-- Amortization Table -->
+              <div class="glass-card animate-in">
+                <div class="table-header">
+                  <h3 class="card-title">📋 Tabel Amortisasi</h3>
+                  <button id="btn-toggle-amortisasi-kulkas" class="btn btn-outline btn-sm">Tampilkan</button>
+                </div>
+                <div id="amortisasi-wrapper-kulkas" style="display:none;">
+                  <div class="table-responsive">
+                    <table class="data-table" id="table-amortisasi-kulkas">
+                      <thead>
+                        <tr>
+                          <th>Bulan</th>
+                          <th>Cicilan</th>
+                          <th>Pokok</th>
+                          <th>Bunga</th>
+                          <th>Sisa Pinjaman</th>
+                        </tr>
+                      </thead>
+                      <tbody></tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 4: ANALISIS KULKAS -->
+      <section id="analisis-kulkas" class="section">
+        <div class="container">
+          <div class="section-header animate-in">
+            <span class="section-badge">04</span>
             <h2 class="section-title">Investasi</h2>
             <p class="section-desc">Kelayakan finansial (Cash)</p>
           </div>
