@@ -442,6 +442,8 @@ function bindEvents() {
       if (document.getElementById('credit-results').style.display !== 'none') {
         calculateCredit();
       }
+      // recalculate investment analysis
+      runInvestmentAnalysis();
     }
   });
 
