@@ -665,6 +665,23 @@ main {
   background: rgba(255, 255, 255, 0.03);
 }
 
+.input-with-unit .unit-prefix {
+  padding: 0 0.85rem;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 500;
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.input-hint {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-top: 0.25rem;
+  margin-bottom: 0.75rem;
+  line-height: 1.4;
+}
+
 .select-input {
   width: 100%;
   padding: 0.65rem 0.85rem;
