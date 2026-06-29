@@ -49,6 +49,7 @@ const state = {
   existingAC: null,      // Selected existing AC object
   biayaLama: 0,          // Biaya listrik AC lama per tahun
   hasExisting: false,
+  customPrices: {},      // Simpan harga custom per AC { [no]: harga }
 };
 
 const stateLampu = {
@@ -424,6 +425,23 @@ function bindEvents() {
       showFinanceACInfo(state.selectedACs[idx]);
     } else {
       document.getElementById('finance-ac-info').style.display = 'none';
+      document.getElementById('finance-harga-aktual-container').style.display = 'none';
+    }
+  });
+
+  // Manual Price Input
+  document.getElementById('input-harga-ac').addEventListener('input', (e) => {
+    const val = parseFloat(e.target.value);
+    const selectEl = document.getElementById('finance-ac-select');
+    const idx = parseInt(selectEl.value);
+    if (!isNaN(idx) && state.selectedACs[idx] && !isNaN(val) && val > 0) {
+      const ac = state.selectedACs[idx];
+      state.customPrices[ac['No']] = val;
+      document.getElementById('cash-price').textContent = formatRupiah(val);
+      // recalculate if credit is shown
+      if (document.getElementById('credit-results').style.display !== 'none') {
+        calculateCredit();
+      }
     }
   });
 
@@ -684,7 +702,14 @@ function showFinanceACInfo(ac) {
   const btu = ac['Kapasitas Pendinginan (BTU/h)'] || 0;
   const tipe = ac['Tipe'] || '-';
   const hargaAktual = ac['Harga (Rp)'] || null;
-  const harga = estimasiHarga(btu, tipe, hargaAktual);
+  
+  let harga = estimasiHarga(btu, tipe, hargaAktual);
+  if (state.customPrices[ac['No']]) {
+    harga = state.customPrices[ac['No']];
+  } else {
+    // Save the default estimation to customPrices so it's ready for editing
+    state.customPrices[ac['No']] = harga;
+  }
 
   const infoDiv = document.getElementById('finance-ac-info');
   infoDiv.style.display = 'block';
@@ -692,8 +717,11 @@ function showFinanceACInfo(ac) {
     <div class="info-row"><span>Merek:</span><span>${ac['Merek']}</span></div>
     <div class="info-row"><span>Tipe:</span><span>${tipe}</span></div>
     <div class="info-row"><span>Kapasitas:</span><span>${formatNum(btu)} BTU/h</span></div>
-    <div class="info-row"><span>Estimasi Harga:</span><span>${formatRupiah(harga)}</span></div>
   `;
+
+  const hargaContainer = document.getElementById('finance-harga-aktual-container');
+  hargaContainer.style.display = 'block';
+  document.getElementById('input-harga-ac').value = harga;
 
   // Update cash price
   document.getElementById('cash-price').textContent = formatRupiah(harga);
@@ -714,7 +742,11 @@ function calculateCredit() {
   const btu = ac['Kapasitas Pendinginan (BTU/h)'] || 0;
   const tipe = ac['Tipe'] || '-';
   const hargaAktual = ac['Harga (Rp)'] || null;
-  const harga = estimasiHarga(btu, tipe, hargaAktual);
+  
+  let harga = estimasiHarga(btu, tipe, hargaAktual);
+  if (state.customPrices[ac['No']]) {
+    harga = state.customPrices[ac['No']];
+  }
 
   const dpPersen = parseFloat(document.getElementById('input-dp').value) || 0;
   const bunga = parseFloat(document.getElementById('input-bunga').value) || 0;
@@ -821,7 +853,10 @@ function runInvestmentAnalysis() {
     const tipe = ac['Tipe'] || '-';
     const biaya = ac['Biaya Listrik Tahunan (Rp)'] || 0;
     const hargaAktual = ac['Harga (Rp)'] || null;
-    const harga = estimasiHarga(btu, tipe, hargaAktual);
+    let harga = estimasiHarga(btu, tipe, hargaAktual);
+    if (state.customPrices[ac['No']]) {
+      harga = state.customPrices[ac['No']];
+    }
     const hemat = hitungPenghematan(state.biayaLama, biaya);
     const efisiensi = ac['Nilai Efisiensi (EER/CSPF)'] || 0;
     const rating = ac['Rating Bintang (1-5)'] || 0;
