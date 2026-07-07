@@ -183,7 +183,8 @@ main {
   left: 0;
   right: 0;
   height: var(--nav-height);
-  background: var(--bg-card);
+  background: rgba(10, 14, 26, 0.85); /* Default for dark mode */
+  background: color-mix(in srgb, var(--bg-primary) 85%, transparent);
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
   border-bottom: 1px solid var(--glass-border);

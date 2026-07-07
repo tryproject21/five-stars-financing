@@ -41,19 +41,34 @@ const PALETTE_ALPHA = [
 // Opsi chart umum untuk tema gelap
 
 
+
+export function getThemeColor(type) {
+  const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+  if (type === 'text') return isLight ? '#1e293b' : 'rgba(255, 255, 255, 0.9)';
+  if (type === 'grid') return isLight ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)';
+  if (type === 'gridBorder') return isLight ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.2)';
+  if (type === 'tooltipBg') return isLight ? 'rgba(255, 255, 255, 0.95)' : 'rgba(15, 23, 42, 0.95)';
+  return '#000';
+}
+
 function getChartDefaults() {
+  const textColor = getThemeColor('text');
+  const gridColor = getThemeColor('grid');
+  const gridBorderColor = getThemeColor('gridBorder');
+  const tooltipBg = getThemeColor('tooltipBg');
+  
   return {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
       legend: {
-        labels: { color: 'var(--text-primary)', font: { family: 'Inter', size: 12 } }
+        labels: { color: textColor, font: { family: 'Inter', size: 12 } }
       },
       tooltip: {
-        backgroundColor: 'var(--bg-secondary)',
+        backgroundColor: tooltipBg,
         titleColor: COLORS.cyan,
-        bodyColor: 'var(--text-primary)',
-        borderColor: 'var(--glass-border)',
+        bodyColor: textColor,
+        borderColor: 'rgba(0, 229, 255, 0.3)',
         borderWidth: 1,
         cornerRadius: 8,
         padding: 12,
@@ -72,12 +87,12 @@ function getChartDefaults() {
     },
     scales: {
       x: {
-        ticks: { color: 'var(--text-secondary)', font: { family: 'Inter', size: 11 } },
-        grid: { color: 'var(--glass-border)', borderColor: 'var(--glass-border)' }
+        ticks: { color: textColor, font: { family: 'Inter', size: 11 } },
+        grid: { color: gridColor, borderColor: gridBorderColor }
       },
       y: {
-        ticks: { color: 'var(--text-secondary)', font: { family: 'Inter', size: 11 } },
-        grid: { color: 'var(--glass-border)', borderColor: 'var(--glass-border)' }
+        ticks: { color: textColor, font: { family: 'Inter', size: 11 } },
+        grid: { color: gridColor, borderColor: gridBorderColor }
       }
     },
     animation: {
@@ -87,12 +102,47 @@ function getChartDefaults() {
   };
 }
 
-// Minimal themeChanged to just trigger an update (canvas needs redrawing to read new CSS vars)
 window.addEventListener('themeChanged', () => {
   Object.values(chartInstances).forEach(chart => {
+    const textColor = getThemeColor('text');
+    const gridColor = getThemeColor('grid');
+    const gridBorderColor = getThemeColor('gridBorder');
+    const tooltipBg = getThemeColor('tooltipBg');
+    
+    if (chart.options.plugins.legend && chart.options.plugins.legend.labels) {
+      chart.options.plugins.legend.labels.color = textColor;
+    }
+    if (chart.options.plugins.title) {
+      chart.options.plugins.title.color = textColor;
+    }
+    if (chart.options.plugins.tooltip) {
+      chart.options.plugins.tooltip.backgroundColor = tooltipBg;
+      chart.options.plugins.tooltip.bodyColor = textColor;
+    }
+    if (chart.options.scales && chart.options.scales.x) {
+      chart.options.scales.x.ticks.color = textColor;
+      if (chart.options.scales.x.grid) {
+        chart.options.scales.x.grid.color = gridColor;
+        chart.options.scales.x.grid.borderColor = gridBorderColor;
+      }
+    }
+    if (chart.options.scales && chart.options.scales.y) {
+      chart.options.scales.y.ticks.color = textColor;
+      if (chart.options.scales.y.grid) {
+        chart.options.scales.y.grid.color = gridColor;
+        chart.options.scales.y.grid.borderColor = gridBorderColor;
+      }
+    }
+    if (chart.options.scales && chart.options.scales.r) {
+      chart.options.scales.r.ticks.color = textColor;
+      if (chart.options.scales.r.grid) chart.options.scales.r.grid.color = gridColor;
+      if (chart.options.scales.r.angleLines) chart.options.scales.r.angleLines.color = gridColor;
+      if (chart.options.scales.r.pointLabels) chart.options.scales.r.pointLabels.color = textColor;
+    }
     chart.update();
   });
 });
+
 
 
 
@@ -134,7 +184,7 @@ export function createCostComparisonChart(canvasId, acNames, biayaBaru, biayaLam
       ...getChartDefaults(),
       plugins: {
         ...getChartDefaults().plugins,
-        title: { display: true, text: 'Perbandingan Biaya Listrik Tahunan', color: 'var(--text-primary)', font: { family: 'Inter', size: 16, weight: '600' } }
+        title: { display: true, text: 'Perbandingan Biaya Listrik Tahunan', color: getThemeColor('text'), font: { family: 'Inter', size: 16, weight: '600' } }
       }
     }
   });
@@ -169,7 +219,7 @@ export function createNPVComparisonChart(canvasId, acNames, npvValues) {
       ...getChartDefaults(),
       plugins: {
         ...getChartDefaults().plugins,
-        title: { display: true, text: 'Perbandingan Net Present Value (NPV)', color: 'var(--text-primary)', font: { family: 'Inter', size: 16, weight: '600' } }
+        title: { display: true, text: 'Perbandingan Net Present Value (NPV)', color: getThemeColor('text'), font: { family: 'Inter', size: 16, weight: '600' } }
       }
     }
   });
@@ -216,7 +266,7 @@ export function createIRRComparisonChart(canvasId, acNames, irrValues, discountR
       ...getChartDefaults(),
       plugins: {
         ...getChartDefaults().plugins,
-        title: { display: true, text: 'Perbandingan Internal Rate of Return (IRR)', color: 'var(--text-primary)', font: { family: 'Inter', size: 16, weight: '600' } }
+        title: { display: true, text: 'Perbandingan Internal Rate of Return (IRR)', color: getThemeColor('text'), font: { family: 'Inter', size: 16, weight: '600' } }
       }
     }
   });
@@ -252,15 +302,15 @@ export function createRadarChart(canvasId, acNames, datasets) {
       responsive: true,
       maintainAspectRatio: false,
       plugins: {
-        legend: { labels: { color: 'var(--text-primary)', font: { family: 'Inter', size: 12 } } },
-        title: { display: true, text: 'Analisis Multi-Dimensi', color: 'var(--text-primary)', font: { family: 'Inter', size: 16, weight: '600' } }
+        legend: { labels: { color: getThemeColor('text'), font: { family: 'Inter', size: 12 } } },
+        title: { display: true, text: 'Analisis Multi-Dimensi', color: getThemeColor('text'), font: { family: 'Inter', size: 16, weight: '600' } }
       },
       scales: {
         r: {
-          ticks: { color: 'var(--text-primary)', backdropColor: 'transparent', font: { size: 10 } },
-          grid: { color: 'var(--glass-border)' },
-          angleLines: { color: 'var(--glass-border)' },
-          pointLabels: { color: 'var(--text-primary)', font: { family: 'Inter', size: 12 } },
+          ticks: { color: getThemeColor('text'), backdropColor: 'transparent', font: { size: 10 } },
+          grid: { color: getThemeColor('grid') },
+          angleLines: { color: getThemeColor('grid') },
+          pointLabels: { color: getThemeColor('text'), font: { family: 'Inter', size: 12 } },
           suggestedMin: 0,
           suggestedMax: 100
         }
@@ -294,12 +344,12 @@ export function createFinancingPieChart(canvasId, dp, totalPokok, totalBunga) {
       maintainAspectRatio: false,
       cutout: '55%',
       plugins: {
-        legend: { position: 'bottom', labels: { color: 'var(--text-primary)', font: { family: 'Inter', size: 12 }, padding: 20 } },
-        title: { display: true, text: 'Komposisi Pembayaran', color: 'var(--text-primary)', font: { family: 'Inter', size: 16, weight: '600' } },
+        legend: { position: 'bottom', labels: { color: getThemeColor('text'), font: { family: 'Inter', size: 12 }, padding: 20 } },
+        title: { display: true, text: 'Komposisi Pembayaran', color: getThemeColor('text'), font: { family: 'Inter', size: 16, weight: '600' } },
         tooltip: {
-          backgroundColor: 'var(--bg-secondary)',
+          backgroundColor: getThemeColor('tooltipBg'),
           titleColor: COLORS.cyan,
-          bodyColor: 'var(--text-primary)',
+          bodyColor: getThemeColor('text'),
           callbacks: {
             label: function(context) {
               const value = context.parsed;
@@ -356,7 +406,7 @@ export function createPaybackChart(canvasId, acNames, paybackValues, umurEkonomi
       ...getChartDefaults(),
       plugins: {
         ...getChartDefaults().plugins,
-        title: { display: true, text: 'Perbandingan Simple Payback Period', color: 'var(--text-primary)', font: { family: 'Inter', size: 16, weight: '600' } }
+        title: { display: true, text: 'Perbandingan Simple Payback Period', color: getThemeColor('text'), font: { family: 'Inter', size: 16, weight: '600' } }
       }
     }
   });
