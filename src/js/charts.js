@@ -2,6 +2,7 @@ import { Chart, registerables } from 'chart.js';
 Chart.register(...registerables);
 
 const chartInstances = {};
+const chartStates = {};
 
 function destroyChart(id) {
   if (chartInstances[id]) {
@@ -103,43 +104,11 @@ function getChartDefaults() {
 }
 
 window.addEventListener('themeChanged', () => {
-  Object.values(chartInstances).forEach(chart => {
-    const textColor = getThemeColor('text');
-    const gridColor = getThemeColor('grid');
-    const gridBorderColor = getThemeColor('gridBorder');
-    const tooltipBg = getThemeColor('tooltipBg');
-    
-    if (chart.options.plugins.legend && chart.options.plugins.legend.labels) {
-      chart.options.plugins.legend.labels.color = textColor;
+  // Recreate all active charts so they fetch the fresh defaults
+  Object.values(chartStates).forEach(state => {
+    if (state && typeof state.createFn === 'function') {
+      state.createFn(...state.args);
     }
-    if (chart.options.plugins.title) {
-      chart.options.plugins.title.color = textColor;
-    }
-    if (chart.options.plugins.tooltip) {
-      chart.options.plugins.tooltip.backgroundColor = tooltipBg;
-      chart.options.plugins.tooltip.bodyColor = textColor;
-    }
-    if (chart.options.scales && chart.options.scales.x) {
-      chart.options.scales.x.ticks.color = textColor;
-      if (chart.options.scales.x.grid) {
-        chart.options.scales.x.grid.color = gridColor;
-        chart.options.scales.x.grid.borderColor = gridBorderColor;
-      }
-    }
-    if (chart.options.scales && chart.options.scales.y) {
-      chart.options.scales.y.ticks.color = textColor;
-      if (chart.options.scales.y.grid) {
-        chart.options.scales.y.grid.color = gridColor;
-        chart.options.scales.y.grid.borderColor = gridBorderColor;
-      }
-    }
-    if (chart.options.scales && chart.options.scales.r) {
-      chart.options.scales.r.ticks.color = textColor;
-      if (chart.options.scales.r.grid) chart.options.scales.r.grid.color = gridColor;
-      if (chart.options.scales.r.angleLines) chart.options.scales.r.angleLines.color = gridColor;
-      if (chart.options.scales.r.pointLabels) chart.options.scales.r.pointLabels.color = textColor;
-    }
-    chart.update();
   });
 });
 
@@ -193,6 +162,7 @@ export function createCostComparisonChart(canvasId, acNames, biayaBaru, biayaLam
 
 // 2. Bar chart: Perbandingan NPV
 export function createNPVComparisonChart(canvasId, acNames, npvValues) {
+  chartStates[canvasId] = { createFn: createNPVComparisonChart, args: [canvasId, acNames, npvValues] };
   destroyChart(canvasId);
   const ctx = document.getElementById(canvasId)?.getContext('2d');
   if (!ctx) return null;
@@ -228,6 +198,7 @@ export function createNPVComparisonChart(canvasId, acNames, npvValues) {
 
 // 3. Bar chart: Perbandingan IRR dengan garis discount rate
 export function createIRRComparisonChart(canvasId, acNames, irrValues, discountRate) {
+  chartStates[canvasId] = { createFn: createIRRComparisonChart, args: [canvasId, acNames, irrValues, discountRate] };
   destroyChart(canvasId);
   const ctx = document.getElementById(canvasId)?.getContext('2d');
   if (!ctx) return null;
@@ -275,6 +246,7 @@ export function createIRRComparisonChart(canvasId, acNames, irrValues, discountR
 
 // 4. Radar chart: Perbandingan multi-dimensi
 export function createRadarChart(canvasId, acNames, datasets) {
+  chartStates[canvasId] = { createFn: createRadarChart, args: [canvasId, acNames, datasets] };
   // datasets = array dari { label, data: [efisiensi, rating, hemat, payback_inverse, daya_inverse] }
   destroyChart(canvasId);
   const ctx = document.getElementById(canvasId)?.getContext('2d');
@@ -323,6 +295,7 @@ export function createRadarChart(canvasId, acNames, datasets) {
 
 // 5. Pie chart (doughnut): Proporsi pokok vs bunga (pembiayaan)
 export function createFinancingPieChart(canvasId, dp, totalPokok, totalBunga) {
+  chartStates[canvasId] = { createFn: createFinancingPieChart, args: [canvasId, dp, totalPokok, totalBunga] };
   destroyChart(canvasId);
   const ctx = document.getElementById(canvasId)?.getContext('2d');
   if (!ctx) return null;
@@ -368,6 +341,7 @@ export function createFinancingPieChart(canvasId, dp, totalPokok, totalBunga) {
 
 // 6. Bar chart: Perbandingan Payback Period
 export function createPaybackChart(canvasId, acNames, paybackValues, umurEkonomis) {
+  chartStates[canvasId] = { createFn: createPaybackChart, args: [canvasId, acNames, paybackValues, umurEkonomis] };
   destroyChart(canvasId);
   const ctx = document.getElementById(canvasId)?.getContext('2d');
   if (!ctx) return null;
@@ -416,6 +390,7 @@ export function createPaybackChart(canvasId, acNames, paybackValues, umurEkonomi
 // Menghancurkan semua instance chart yang ada
 export function destroyAllCharts() {
   Object.keys(chartInstances).forEach(id => destroyChart(id));
+  Object.keys(chartStates).forEach(id => delete chartStates[id]);
 }
 
 export { COLORS, PALETTE, PALETTE_ALPHA };
