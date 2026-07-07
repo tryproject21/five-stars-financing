@@ -81,9 +81,9 @@ const stateKulkas = {
 // ========================
 // Initialize Theme
 function initTheme() {
-  const savedTheme = localStorage.getItem('theme') || 'dark';
-  if (savedTheme === 'light') {
-    document.documentElement.setAttribute('data-theme', 'light');
+  const savedTheme = localStorage.getItem('theme') || 'light';
+  if (savedTheme === 'dark') {
+    document.documentElement.setAttribute('data-theme', 'dark');
   } else {
     document.documentElement.removeAttribute('data-theme');
   }
@@ -92,13 +92,14 @@ function initTheme() {
   if (themeBtn) {
     themeBtn.addEventListener('click', () => {
       const currentTheme = document.documentElement.getAttribute('data-theme');
-      if (currentTheme === 'light') {
+      if (currentTheme === 'dark') {
         document.documentElement.removeAttribute('data-theme');
-        localStorage.setItem('theme', 'dark');
-      } else {
-        document.documentElement.setAttribute('data-theme', 'light');
         localStorage.setItem('theme', 'light');
+      } else {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        localStorage.setItem('theme', 'dark');
       }
+      window.dispatchEvent(new Event('themeChanged'));
     });
   }
 }

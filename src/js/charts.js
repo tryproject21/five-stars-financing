@@ -44,7 +44,7 @@ const PALETTE_ALPHA = [
 
 
 export function getThemeColor(type) {
-  const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+  const isLight = document.documentElement.getAttribute('data-theme') !== 'dark';
   if (type === 'text') return isLight ? '#1e293b' : 'rgba(255, 255, 255, 0.9)';
   if (type === 'grid') return isLight ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)';
   if (type === 'gridBorder') return isLight ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.2)';
