@@ -42,10 +42,25 @@ export async function loadDatabaseLampu() {
     lampuDatabase = lampuDatabase.map(row => {
       for (const kolom of KOLOM_NUMERIK) {
         if (row[kolom] !== undefined && row[kolom] !== '') {
-          const nilaiStr = String(row[kolom])
-            .replace(/[^\d.,-]/g, '')
-            .replace(/\./g, '')
-            .replace(/,/g, '.');
+          let nilaiStr = String(row[kolom]).replace(/[^\d.,-]/g, '');
+          if (nilaiStr) {
+            const lastDot = nilaiStr.lastIndexOf('.');
+            const lastComma = nilaiStr.lastIndexOf(',');
+            if (lastComma > -1 && lastDot > -1) {
+              if (lastComma > lastDot) {
+                nilaiStr = nilaiStr.replace(/\./g, '').replace(/,/g, '.');
+              } else {
+                nilaiStr = nilaiStr.replace(/,/g, '');
+              }
+            } else if (lastComma > -1) {
+              const parts = nilaiStr.split(',');
+              if (parts.length > 2 || parts[parts.length - 1].length === 3) {
+                nilaiStr = nilaiStr.replace(/,/g, '');
+              } else {
+                nilaiStr = nilaiStr.replace(/,/g, '.');
+              }
+            }
+          }
           const nilai = parseFloat(nilaiStr);
           row[kolom] = isNaN(nilai) ? 0 : nilai;
         } else {

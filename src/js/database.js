@@ -69,10 +69,25 @@ export async function loadDatabase() {
       for (const kolom of KOLOM_NUMERIK) {
         if (row[kolom] !== undefined && row[kolom] !== '') {
           // Hapus karakter non-numerik kecuali titik dan koma untuk parsing
-          const nilaiStr = String(row[kolom])
-            .replace(/[^\d.,-]/g, '')  // Hapus selain digit, titik, koma, minus
-            .replace(/\./g, '')         // Hapus titik pemisah ribuan (format Indonesia)
-            .replace(/,/g, '.');        // Ganti koma desimal ke titik
+          let nilaiStr = String(row[kolom]).replace(/[^\d.,-]/g, '');
+          if (nilaiStr) {
+            const lastDot = nilaiStr.lastIndexOf('.');
+            const lastComma = nilaiStr.lastIndexOf(',');
+            if (lastComma > -1 && lastDot > -1) {
+              if (lastComma > lastDot) {
+                nilaiStr = nilaiStr.replace(/\./g, '').replace(/,/g, '.');
+              } else {
+                nilaiStr = nilaiStr.replace(/,/g, '');
+              }
+            } else if (lastComma > -1) {
+              const parts = nilaiStr.split(',');
+              if (parts.length > 2 || parts[parts.length - 1].length === 3) {
+                nilaiStr = nilaiStr.replace(/,/g, '');
+              } else {
+                nilaiStr = nilaiStr.replace(/,/g, '.');
+              }
+            }
+          }
           const nilai = parseFloat(nilaiStr);
           row[kolom] = isNaN(nilai) ? 0 : nilai;
         } else {
