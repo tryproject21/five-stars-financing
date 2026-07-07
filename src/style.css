@@ -46,7 +46,33 @@
   --transition-slow: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   
   /* Font */
+  /* Font */
   --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+/* --- Light Theme Overrides (EBTKE Inspiration) --- */
+html[data-theme="light"] {
+  /* Colors */
+  --bg-primary: #f0f4f8;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #e2e8f0;
+  --bg-card: rgba(255, 255, 255, 0.85);
+  --bg-card-hover: rgba(255, 255, 255, 1);
+  
+  --text-primary: #1e293b;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+  
+  --accent-cyan: #0097b2;
+  --accent-teal: #0284c7;
+  
+  --gradient-primary: linear-gradient(135deg, #0097b2 0%, #0284c7 100%);
+  --gradient-hero: linear-gradient(135deg, #f0f4f8 0%, #e2e8f0 40%, #cbd5e1 100%);
+  --gradient-card: linear-gradient(135deg, rgba(0, 151, 178, 0.05) 0%, rgba(2, 132, 199, 0.05) 100%);
+  
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(0, 151, 178, 0.2);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
 }
 
 /* --- Reset & Base --- */
@@ -248,6 +274,36 @@ main {
   height: 2px;
   background: var(--accent-cyan);
   border-radius: 1px;
+}
+
+.theme-toggle-btn {
+  background: none;
+  border: none;
+  color: var(--text-primary);
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition-fast);
+  margin-right: 10px;
+}
+
+.theme-toggle-btn:hover {
+  transform: scale(1.1);
+}
+
+.theme-toggle-btn .theme-icon {
+  display: none;
+}
+
+html[data-theme="light"] .theme-toggle-btn .dark-icon {
+  display: block;
+}
+
+html:not([data-theme="light"]) .theme-toggle-btn .light-icon {
+  display: block;
 }
 
 .mobile-menu-btn {
