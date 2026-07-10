@@ -1070,10 +1070,19 @@ html:not([data-theme="light"]) .theme-toggle-btn .light-icon {
   align-items: center;
   justify-content: space-between;
   padding: 0.85rem 1.5rem;
-  margin-bottom: 1.5rem;
-  animation: slideDown 0.3s ease;
+  animation: slideUp 0.3s ease;
   border-color: rgba(0, 229, 255, 0.3);
-  background: rgba(0, 229, 255, 0.05);
+  background: rgba(10, 15, 30, 0.95);
+  backdrop-filter: blur(12px);
+  position: fixed;
+  bottom: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90%;
+  max-width: 800px;
+  border-radius: var(--border-radius-lg);
+  z-index: 1000;
+  box-shadow: 0 10px 30px rgba(0, 229, 255, 0.2);
 }
 
 .compare-info {

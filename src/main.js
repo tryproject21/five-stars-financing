@@ -775,6 +775,10 @@ function runComparison() {
   showToast('Analisis perbandingan siap!', 'success');
 }
 
+function hitungBiayaTahunanAC(btu, efisiensi, dayaWatt, jamPerHari, tarif) {
+  return (dayaWatt / 1000) * jamPerHari * 365 * tarif;
+}
+
 function runInterACComparison() {
   if (stateCompare.selectedACs.length < 2) {
     showToast('Pilih minimal 2 AC untuk perbandingan antar AC', 'warning');
