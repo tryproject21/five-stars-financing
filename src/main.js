@@ -367,7 +367,8 @@ function bindEvents() {
         const bintang = ac['Rating Bintang (1-5)'];
         document.getElementById('existing-bintang').textContent = bintang ? '⭐'.repeat(bintang) : '-';
         
-        const isInverter = (ac['Tipe'] || '').toLowerCase().includes('inverter');
+        const tipeLower = (ac['Tipe'] || '').toLowerCase();
+        const isInverter = tipeLower.includes('inverter') && !tipeLower.includes('non');
         document.getElementById('existing-efisiensi-label').textContent = isInverter ? 'CSPF:' : 'EER:';
         const efisiensi = ac['Nilai Efisiensi (EER/CSPF)'];
         document.getElementById('existing-efisiensi-value').textContent = efisiensi ? efisiensi.toLocaleString('id-ID', {maximumFractionDigits: 2}) : '-';
