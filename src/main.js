@@ -2081,6 +2081,18 @@ function runInvestmentAnalysisKulkas() {
 // ========================
 function findRecommendationsCompare() {
   const db = getDatabase();
+  if (db.length === 0) {
+    // Tunggu sampai database dimuat
+    document.getElementById('ac-grid-compare').innerHTML = `
+      <div class="empty-state">
+        <div class="loader"></div>
+        <p>Memuat database AC...</p>
+      </div>
+    `;
+    setTimeout(findRecommendationsCompare, 500);
+    return;
+  }
+  
   stateCompare.rekomendasi = [...db];
   stateCompare.currentPage = 1;
   stateCompare.selectedACs = [];
