@@ -49,6 +49,9 @@ const state = {
   existingAC: null,      // Selected existing AC object
   biayaLama: 0,          // Biaya listrik AC lama per tahun
   hasExisting: false,
+  jamPerHari: 8,
+  tarifListrik: 1444,    // Tarif non-subsidi rata-rata
+  manualPrices: {},      // Harga inputan manual khusus untuk antar-AC
   customPrices: {},      // Simpan harga custom per AC { [no]: harga }
 };
 
@@ -401,6 +404,8 @@ function bindEvents() {
 
   // --- Compare buttons ---
   document.getElementById('btn-compare').addEventListener('click', runComparison);
+  document.getElementById('btn-compare-inter').addEventListener('click', runInterACComparison);
+  document.getElementById('btn-recalc-inter').addEventListener('click', runInterACComparison);
   document.getElementById('btn-clear-compare').addEventListener('click', clearComparison);
 
   // --- Pagination ---
@@ -670,9 +675,16 @@ function toggleSelectAC(no) {
 function updateCompareBar() {
   const bar = document.getElementById('compare-bar');
   const count = document.getElementById('compare-count');
+  const btnInter = document.getElementById('btn-compare-inter');
+  
   if (state.selectedACs.length > 0) {
     bar.style.display = 'flex';
     count.textContent = state.selectedACs.length;
+    
+    // Tampilkan tombol Antar AC Baru jika lebih dari 1 AC dipilih
+    if (btnInter) {
+      btnInter.style.display = state.selectedACs.length >= 2 ? 'inline-flex' : 'none';
+    }
   } else {
     bar.style.display = 'none';
   }
@@ -687,6 +699,7 @@ function clearComparison() {
   // Reset analysis
   document.getElementById('analysis-active').style.display = 'none';
   document.getElementById('analysis-content').style.display = 'block';
+  document.getElementById('analisis-inter-ac').style.display = 'none';
   destroyAllCharts();
 }
 
@@ -699,10 +712,151 @@ function runComparison() {
     return;
   }
 
+  document.getElementById('analisis-inter-ac').style.display = 'none';
+
   updateFinancingSection();
   runInvestmentAnalysis();
   scrollToSection('pembiayaan');
   showToast('Analisis perbandingan siap!', 'success');
+}
+
+function runInterACComparison() {
+  if (state.selectedACs.length < 2) {
+    showToast('Pilih minimal 2 AC untuk perbandingan antar AC', 'warning');
+    return;
+  }
+
+  // Sembunyikan analisis standar
+  document.getElementById('analysis-active').style.display = 'none';
+  document.getElementById('analysis-content').style.display = 'none';
+  
+  // Tampilkan seksi baru
+  const interSection = document.getElementById('analisis-inter-ac');
+  interSection.style.display = 'block';
+
+  // Urutkan AC berdasarkan Harga Estimasi / Harga Manual
+  const sortedACs = [...state.selectedACs].sort((a, b) => {
+    let hargaA = state.customPrices[a['No']] || estimasiHarga(a['Kapasitas Pendinginan (BTU/h)'], a['Tipe'], a['Harga (Rp)']);
+    let hargaB = state.customPrices[b['No']] || estimasiHarga(b['Kapasitas Pendinginan (BTU/h)'], b['Tipe'], b['Harga (Rp)']);
+    return hargaA - hargaB;
+  });
+
+  const baseAC = sortedACs[0];
+  const baseHarga = state.customPrices[baseAC['No']] || estimasiHarga(baseAC['Kapasitas Pendinginan (BTU/h)'], baseAC['Tipe'], baseAC['Harga (Rp)']);
+  const baseBiaya = hitungBiayaTahunanAC(baseAC['Kapasitas Pendinginan (BTU/h)'], baseAC['Nilai Efisiensi (EER/CSPF)'], baseAC['Daya (watt)'], state.jamPerHari, state.tarifListrik);
+
+  // Render Input Harga
+  const inputContainer = document.getElementById('inter-ac-price-inputs');
+  inputContainer.innerHTML = sortedACs.map((ac, idx) => {
+    let harga = state.customPrices[ac['No']] || estimasiHarga(ac['Kapasitas Pendinginan (BTU/h)'], ac['Tipe'], ac['Harga (Rp)']);
+    state.customPrices[ac['No']] = harga; // Pastikan tersimpan
+
+    return `
+      <div class="input-group">
+        <label>${idx === 0 ? '[AC BASELINE] ' : ''}${ac['Merek']} - ${ac['Model'] || ac['Famili']}</label>
+        <div class="input-with-unit">
+          <span class="unit">Rp</span>
+          <input type="number" class="manual-price-input" data-no="${ac['No']}" value="${harga}" min="0" step="100000">
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  // Pasang listener untuk input
+  inputContainer.querySelectorAll('.manual-price-input').forEach(input => {
+    input.addEventListener('change', (e) => {
+      const val = parseFloat(e.target.value);
+      if (!isNaN(val) && val >= 0) {
+        state.customPrices[e.target.dataset.no] = val;
+      }
+    });
+  });
+
+  // Ambil parameter dari form
+  const umurEkonomis = parseInt(document.getElementById('input-umur-ekonomis').value) || 5;
+  const discountRate = parseFloat(document.getElementById('input-discount-rate').value) / 100 || 0.10;
+
+  // Render Hasil
+  const resultsContainer = document.getElementById('inter-ac-results');
+  resultsContainer.innerHTML = sortedACs.slice(1).map(ac => {
+    const harga = state.customPrices[ac['No']];
+    const biaya = hitungBiayaTahunanAC(ac['Kapasitas Pendinginan (BTU/h)'], ac['Nilai Efisiensi (EER/CSPF)'], ac['Daya (watt)'], state.jamPerHari, state.tarifListrik);
+    
+    const incrementalInvestasi = harga - baseHarga;
+    const incrementalPenghematan = baseBiaya - biaya; // Jika AC ini lebih murah listriknya, penghematan positif
+
+    let cardHTML = '';
+
+    if (incrementalInvestasi <= 0) {
+      // Kasus aneh: Harga lebih murah/sama, tapi listrik lebih hemat? Itu No-Brainer!
+      if (incrementalPenghematan >= 0) {
+        cardHTML = `
+          <div class="glass-card result-card success">
+            <h3 style="margin-bottom:0.5rem;">Upgrade ke ${ac['Merek']}</h3>
+            <p style="font-size:0.9rem; margin-bottom:1rem; opacity:0.8;">AC ini lebih murah/sama harganya, dan biaya listriknya lebih hemat! (Pilihan Pasti)</p>
+            <div class="result-number">LAYAK (NO-BRAINER)</div>
+          </div>
+        `;
+      } else {
+        cardHTML = `
+          <div class="glass-card result-card warning">
+            <h3 style="margin-bottom:0.5rem;">Upgrade ke ${ac['Merek']}</h3>
+            <p style="font-size:0.9rem; margin-bottom:1rem; opacity:0.8;">AC ini lebih murah/sama harganya, tapi listriknya lebih boros.</p>
+            <div class="result-number" style="color:var(--warning)">TIDAK DISARANKAN</div>
+          </div>
+        `;
+      }
+    } else {
+      // Normal case: Harga lebih mahal, hitung kelayakan dari penghematan
+      const analysis = fullAnalysis(incrementalInvestasi, incrementalPenghematan, umurEkonomis, discountRate);
+      const layak = analysis.kelayakan.status === 'go';
+      
+      cardHTML = `
+        <div class="glass-card result-card ${layak ? 'success' : 'danger'}">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1rem;">
+            <h3>Upgrade ke ${ac['Merek']}</h3>
+            <span class="badge ${layak ? 'success' : 'danger'}">${analysis.kelayakan.keputusan}</span>
+          </div>
+          <p style="font-size:0.8rem; margin-bottom:1rem; opacity:0.8;">Melawan Baseline: ${baseAC['Merek']}</p>
+          
+          <div class="metrics-grid" style="margin-bottom:1rem;">
+            <div class="metric">
+              <span class="metric-label">Selisih Investasi</span>
+              <span class="metric-value">Rp ${new Intl.NumberFormat('id-ID').format(incrementalInvestasi)}</span>
+            </div>
+            <div class="metric">
+              <span class="metric-label">Penghematan/Thn</span>
+              <span class="metric-value">Rp ${new Intl.NumberFormat('id-ID').format(incrementalPenghematan)}</span>
+            </div>
+          </div>
+
+          <div class="metrics-grid">
+            <div class="metric">
+              <span class="metric-label">Simple Payback</span>
+              <span class="metric-value">${analysis.paybackPeriod === Infinity || analysis.paybackPeriod < 0 ? '-' : analysis.paybackPeriod.toFixed(1)} thn</span>
+            </div>
+            <div class="metric">
+              <span class="metric-label">NPV</span>
+              <span class="metric-value">${new Intl.NumberFormat('id-ID').format(Math.round(analysis.npv))}</span>
+            </div>
+            <div class="metric">
+              <span class="metric-label">IRR</span>
+              <span class="metric-value">${(analysis.irr * 100).toFixed(1)}%</span>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    return cardHTML;
+  }).join('');
+
+  if (sortedACs.length < 2) {
+    resultsContainer.innerHTML = '<p>Pilih minimal 2 AC untuk dianalisis.</p>';
+  }
+
+  scrollToSection('analisis-inter-ac');
+  showToast('Analisis Antar AC Siap!', 'success');
 }
 
 // ========================

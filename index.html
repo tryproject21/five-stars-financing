@@ -315,7 +315,8 @@
             <span id="compare-count">0</span> AC dipilih untuk perbandingan
           </div>
           <div class="compare-actions">
-            <button id="btn-compare" class="btn btn-primary btn-sm">Bandingkan Sekarang</button>
+            <button id="btn-compare" class="btn btn-primary btn-sm">Vs AC Lama</button>
+            <button id="btn-compare-inter" class="btn btn-secondary btn-sm" style="display:none; background:var(--gradient-secondary);">Antar AC Baru</button>
             <button id="btn-clear-compare" class="btn btn-outline btn-sm">Hapus Semua</button>
           </div>
         </div>
@@ -543,6 +544,34 @@
         </div>
       </div>
     </section>
+
+    <!-- NEW SECTION: Perbandingan Antar AC Baru -->
+    <section id="analisis-inter-ac" class="section" style="display:none;">
+      <div class="section-header">
+        <h2 class="section-title">Upgrade ROI (Antar AC Baru)</h2>
+        <p class="section-subtitle">Analisis kelayakan investasi jika Anda memilih tipe AC yang lebih efisien dibandingkan tipe AC standar/termurah dari pilihan Anda.</p>
+      </div>
+
+      <div class="container">
+        <!-- Input Harga Manual -->
+        <div class="glass-card mb-2">
+          <h3 style="margin-bottom: 1rem; font-size: 1.1rem; color: var(--text-primary);">Sesuaikan Harga Aktual (Opsional)</h3>
+          <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1rem;">Harga di bawah adalah estimasi. Anda dapat mengubahnya dengan harga toko aktual untuk analisis yang lebih akurat.</p>
+          <div id="inter-ac-price-inputs" class="grid-2">
+            <!-- Diisi dari JS -->
+          </div>
+          <div style="margin-top: 1rem; text-align: right;">
+            <button id="btn-recalc-inter" class="btn btn-primary btn-sm">Hitung Ulang</button>
+          </div>
+        </div>
+
+        <!-- Hasil Analisis Antar AC -->
+        <div id="inter-ac-results" class="grid-2">
+          <!-- Diisi dari JS -->
+        </div>
+      </div>
+    </section>
+
     </div> <!-- /view-ac -->
 
     <div id="view-lampu" class="app-view">
