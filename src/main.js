@@ -367,11 +367,10 @@ function bindEvents() {
         const bintang = ac['Rating Bintang (1-5)'];
         document.getElementById('existing-bintang').textContent = bintang ? '⭐'.repeat(bintang) : '-';
         
-        const tipeLower = (ac['Tipe'] || '').toLowerCase();
-        const isInverter = tipeLower.includes('inverter') && !tipeLower.includes('non');
-        document.getElementById('existing-efisiensi-label').textContent = isInverter ? 'CSPF:' : 'EER:';
+        document.getElementById('existing-efisiensi-label').textContent = 'Efisiensi:';
         const efisiensi = ac['Nilai Efisiensi (EER/CSPF)'];
-        document.getElementById('existing-efisiensi-value').textContent = efisiensi ? efisiensi.toLocaleString('id-ID', {maximumFractionDigits: 2}) : '-';
+        const baseline = ac['Baseline'] || '';
+        document.getElementById('existing-efisiensi-value').textContent = efisiensi ? `${efisiensi.toLocaleString('id-ID', {maximumFractionDigits: 2})} ${baseline}`.trim() : '-';
         
         document.getElementById('existing-btu').textContent = formatNum(ac['Kapasitas Pendinginan (BTU/h)']) + ' BTU/h';
         document.getElementById('existing-daya').textContent = formatNum(ac['Daya (watt)']) + ' W';
