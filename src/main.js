@@ -363,6 +363,15 @@ function bindEvents() {
         document.getElementById('input-biaya-lama').value = Math.round(biaya);
 
         document.getElementById('existing-tipe').textContent = ac['Tipe'] || '-';
+        
+        const bintang = ac['Rating Bintang (1-5)'];
+        document.getElementById('existing-bintang').textContent = bintang ? '⭐'.repeat(bintang) : '-';
+        
+        const isInverter = (ac['Tipe'] || '').toLowerCase().includes('inverter');
+        document.getElementById('existing-efisiensi-label').textContent = isInverter ? 'CSPF:' : 'EER:';
+        const efisiensi = ac['Nilai Efisiensi (EER/CSPF)'];
+        document.getElementById('existing-efisiensi-value').textContent = efisiensi ? efisiensi.toLocaleString('id-ID', {maximumFractionDigits: 2}) : '-';
+        
         document.getElementById('existing-btu').textContent = formatNum(ac['Kapasitas Pendinginan (BTU/h)']) + ' BTU/h';
         document.getElementById('existing-daya').textContent = formatNum(ac['Daya (watt)']) + ' W';
         document.getElementById('existing-biaya').textContent = formatRupiah(biaya);
