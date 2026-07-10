@@ -32,7 +32,13 @@
         <span class="brand-text">Five Star <span class="gradient-text">Financing</span></span>
       </a>
       <div class="nav-links">
-        <a href="#" class="nav-link top-nav-link active" data-app="ac">AC</a>
+        <div class="nav-dropdown">
+          <a href="#" class="nav-link top-nav-link active" data-app="ac">AC ▾</a>
+          <div class="dropdown-content glass-card">
+            <a href="#" class="dropdown-item active" data-ac-view="kalkulasi">Kalkulasi Kelayakan</a>
+            <a href="#" class="dropdown-item" data-ac-view="bandingkan">Bandingkan Produk</a>
+          </div>
+        </div>
         <a href="#" class="nav-link top-nav-link" data-app="penanak-nasi">Penanak Nasi</a>
         <a href="#" class="nav-link top-nav-link" data-app="lampu">Lampu</a>
         <a href="#" class="nav-link top-nav-link" data-app="lemari-pendingin">Lemari Pendingin</a>
@@ -53,7 +59,13 @@
 
   <!-- Mobile Nav -->
   <div id="mobile-nav" class="mobile-nav">
-    <a href="#" class="mobile-nav-link top-nav-link active" data-app="ac">AC</a>
+    <div class="mobile-nav-dropdown">
+      <a href="#" class="mobile-nav-link top-nav-link active" data-app="ac" style="display:flex; justify-content:space-between; width:100%;">AC <span>▾</span></a>
+      <div class="mobile-dropdown-content">
+        <a href="#" class="mobile-dropdown-item active" data-ac-view="kalkulasi">Kalkulasi Kelayakan</a>
+        <a href="#" class="mobile-dropdown-item" data-ac-view="bandingkan">Bandingkan Produk</a>
+      </div>
+    </div>
     <a href="#" class="mobile-nav-link top-nav-link" data-app="penanak-nasi">Penanak Nasi</a>
     <a href="#" class="mobile-nav-link top-nav-link" data-app="lampu">Lampu</a>
     <a href="#" class="mobile-nav-link top-nav-link" data-app="lemari-pendingin">Lemari Pendingin</a>
@@ -315,8 +327,7 @@
             <span id="compare-count">0</span> AC dipilih untuk perbandingan
           </div>
           <div class="compare-actions">
-            <button id="btn-compare" class="btn btn-primary btn-sm">Vs AC Lama</button>
-            <button id="btn-compare-inter" class="btn btn-secondary btn-sm" style="display:none; background:var(--gradient-secondary);">Antar AC Baru</button>
+            <button id="btn-compare" class="btn btn-primary btn-sm">Bandingkan Sekarang</button>
             <button id="btn-clear-compare" class="btn btn-outline btn-sm">Hapus Semua</button>
           </div>
         </div>
@@ -545,34 +556,115 @@
       </div>
     </section>
 
-    <!-- NEW SECTION: Perbandingan Antar AC Baru -->
-    <section id="analisis-inter-ac" class="section" style="display:none;">
-      <div class="section-header">
-        <h2 class="section-title">Upgrade ROI (Antar AC Baru)</h2>
-        <p class="section-subtitle">Analisis kelayakan investasi jika Anda memilih tipe AC yang lebih efisien dibandingkan tipe AC standar/termurah dari pilihan Anda.</p>
-      </div>
+    </div> <!-- /view-ac -->
 
-      <div class="container">
-        <!-- Input Harga Manual -->
-        <div class="glass-card mb-2">
-          <h3 style="margin-bottom: 1rem; font-size: 1.1rem; color: var(--text-primary);">Sesuaikan Harga Aktual (Opsional)</h3>
-          <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1rem;">Harga di bawah adalah estimasi. Anda dapat mengubahnya dengan harga toko aktual untuk analisis yang lebih akurat.</p>
-          <div id="inter-ac-price-inputs" class="grid-2">
+    <div id="view-ac-compare" class="app-view">
+      <section class="hero-section" style="padding-top: 6rem; padding-bottom: 2rem;">
+        <div class="hero-bg">
+          <div class="hero-orb orb-1"></div>
+          <div class="hero-orb orb-2"></div>
+        </div>
+        <div class="container hero-content">
+          <h1 class="hero-title animate-in" style="font-size: 2.5rem;">
+            Bandingkan <span class="gradient-text">Produk AC</span>
+          </h1>
+          <p class="hero-subtitle animate-in">Cari, pilih 2-3 AC, dan lihat kelayakan investasi (Upgrade ROI) antar tipe AC tersebut.</p>
+        </div>
+      </section>
+
+      <section class="section" style="padding-top: 1rem;">
+        <div class="container">
+          <!-- Filters -->
+          <div class="filter-bar glass-card animate-in">
+            <div class="filter-group">
+              <label for="filter-brand-compare">Merek</label>
+              <select id="filter-brand-compare" class="select-input select-sm">
+                <option value="">Semua Merek</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label for="filter-type-compare">Tipe</label>
+              <select id="filter-type-compare" class="select-input select-sm">
+                <option value="">Semua Tipe</option>
+                <option value="Inverter">Inverter</option>
+                <option value="Non-Inverter">Non-Inverter</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label for="filter-rating-compare">Min Rating</label>
+              <select id="filter-rating-compare" class="select-input select-sm">
+                <option value="">Semua</option>
+                <option value="5">⭐⭐⭐⭐⭐</option>
+                <option value="4">⭐⭐⭐⭐+</option>
+                <option value="3">⭐⭐⭐+</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label for="filter-sort-compare">Urutkan</label>
+              <select id="filter-sort-compare" class="select-input select-sm">
+                <option value="rating-desc">Rating Tertinggi</option>
+                <option value="biaya-asc">Estimasi Harga Termurah</option>
+                <option value="efisiensi-desc">Efisiensi Tertinggi</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <span class="result-count" id="result-count-compare">0 hasil</span>
+            </div>
+          </div>
+
+          <!-- Selected for comparison -->
+          <div id="compare-bar-inter" class="compare-bar glass-card" style="display:none;">
+            <div class="compare-info">
+              <span>📊</span>
+              <span id="compare-count-inter">0</span> AC dipilih
+            </div>
+            <div class="compare-actions">
+              <button id="btn-compare-inter" class="btn btn-primary btn-sm">Bandingkan Antar AC</button>
+              <button id="btn-clear-compare-inter" class="btn btn-outline btn-sm">Hapus Semua</button>
+            </div>
+          </div>
+
+          <!-- AC Cards Grid -->
+          <div id="ac-grid-compare" class="ac-grid">
+            <!-- Rendered by JS -->
+          </div>
+
+          <!-- Pagination -->
+          <div class="pagination" id="pagination-compare" style="display:none;">
+            <button id="btn-prev-compare" class="btn btn-outline btn-sm">Sebelumnya</button>
+            <span id="page-info-compare">Halaman 1 / 1</span>
+            <button id="btn-next-compare" class="btn btn-outline btn-sm">Selanjutnya</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- NEW SECTION: Perbandingan Antar AC Baru -->
+      <section id="analisis-inter-ac" class="section" style="display:none;">
+        <div class="section-header">
+          <h2 class="section-title">Upgrade ROI (Antar AC Baru)</h2>
+          <p class="section-subtitle">Analisis kelayakan investasi jika Anda memilih tipe AC yang lebih efisien dibandingkan tipe AC standar/termurah dari pilihan Anda.</p>
+        </div>
+
+        <div class="container">
+          <!-- Input Harga Manual -->
+          <div class="glass-card mb-2">
+            <h3 style="margin-bottom: 1rem; font-size: 1.1rem; color: var(--text-primary);">Sesuaikan Harga Aktual (Opsional)</h3>
+            <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1rem;">Harga di bawah adalah estimasi. Anda dapat mengubahnya dengan harga toko aktual untuk analisis yang lebih akurat.</p>
+            <div id="inter-ac-price-inputs" class="grid-2">
+              <!-- Diisi dari JS -->
+            </div>
+            <div style="margin-top: 1rem; text-align: right;">
+              <button id="btn-recalc-inter" class="btn btn-primary btn-sm">Hitung Ulang</button>
+            </div>
+          </div>
+
+          <!-- Hasil Analisis Antar AC -->
+          <div id="inter-ac-results" class="grid-2">
             <!-- Diisi dari JS -->
           </div>
-          <div style="margin-top: 1rem; text-align: right;">
-            <button id="btn-recalc-inter" class="btn btn-primary btn-sm">Hitung Ulang</button>
-          </div>
         </div>
-
-        <!-- Hasil Analisis Antar AC -->
-        <div id="inter-ac-results" class="grid-2">
-          <!-- Diisi dari JS -->
-        </div>
-      </div>
-    </section>
-
-    </div> <!-- /view-ac -->
+      </section>
+    </div> <!-- /view-ac-compare -->
 
     <div id="view-lampu" class="app-view">
       <!-- HERO SECTION LAMPU -->

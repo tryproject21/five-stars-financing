@@ -1818,3 +1818,77 @@ input[type="number"]::-webkit-outer-spin-button {
 input[type="number"] {
   -moz-appearance: textfield;
 }
+
+/* ========================
+   Dropdown Navigation
+======================== */
+.nav-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.dropdown-content {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  min-width: 200px;
+  background: var(--bg-card);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+  z-index: 1000;
+  border-radius: 12px;
+  overflow: hidden;
+  padding: 0.5rem 0;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: all 0.3s ease;
+}
+
+.nav-dropdown:hover .dropdown-content {
+  display: block;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.dropdown-item {
+  display: block;
+  padding: 0.75rem 1.5rem;
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.dropdown-item:hover, .dropdown-item.active {
+  color: var(--primary);
+  background: rgba(0, 198, 255, 0.05);
+}
+
+/* Mobile dropdown */
+.mobile-nav-dropdown {
+  width: 100%;
+}
+.mobile-dropdown-content {
+  display: none;
+  background: rgba(0,0,0,0.02);
+  border-radius: 8px;
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+}
+.mobile-nav-dropdown:hover .mobile-dropdown-content {
+  display: block;
+}
+.mobile-dropdown-item {
+  display: block;
+  padding: 0.75rem 1rem;
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 0.95rem;
+}
+.mobile-dropdown-item.active {
+  color: var(--primary);
+  font-weight: 600;
+}

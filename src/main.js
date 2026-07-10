@@ -238,7 +238,7 @@ function bindEvents() {
   });
 
   // --- Top App Nav ---
-  document.querySelectorAll('.top-nav-link').forEach(link => {
+  document.querySelectorAll('.top-nav-link[data-app]').forEach(link => {
     link.addEventListener('click', (e) => {
       e.preventDefault();
       const app = link.dataset.app;
@@ -252,14 +252,37 @@ function bindEvents() {
         view.classList.remove('active');
       });
       
-      if (app === 'ac') {
-        document.getElementById('view-ac').classList.add('active');
-      } else if (app === 'lampu') {
-        document.getElementById('view-lampu').classList.add('active');
-      } else if (app === 'lemari-pendingin') {
-        document.getElementById('view-lemari-pendingin').classList.add('active');
+      const targetView = document.getElementById(`view-${app}`);
+      if (targetView) {
+        targetView.classList.add('active');
       } else {
         document.getElementById('view-coming-soon').classList.add('active');
+      }
+      
+      // Close mobile nav if open
+      document.getElementById('mobile-nav').classList.remove('open');
+    });
+  });
+
+  // --- AC Dropdown Nav ---
+  document.querySelectorAll('[data-ac-view]').forEach(link => {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      const viewType = link.dataset.acView;
+
+      // Set active in dropdown
+      document.querySelectorAll('[data-ac-view]').forEach(l => l.classList.remove('active'));
+      document.querySelectorAll(`[data-ac-view="${viewType}"]`).forEach(l => l.classList.add('active'));
+
+      // Switch app views
+      document.querySelectorAll('.app-view').forEach(view => view.classList.remove('active'));
+      if (viewType === 'kalkulasi') {
+        document.getElementById('view-ac').classList.add('active');
+      } else {
+        document.getElementById('view-ac-compare').classList.add('active');
+        if (stateCompare.rekomendasi.length === 0) {
+          findRecommendationsCompare();
+        }
       }
       
       // Close mobile nav if open
@@ -397,18 +420,26 @@ function bindEvents() {
     scrollToSection('rekomendasi');
   });
 
-  // --- Filter controls ---
+  // --- Filter controls (Kalkulasi) ---
   ['filter-brand', 'filter-type', 'filter-rating', 'filter-sort'].forEach(id => {
     document.getElementById(id).addEventListener('change', applyFilters);
   });
 
-  // --- Compare buttons ---
+  // --- Filter controls (Compare) ---
+  ['filter-brand-compare', 'filter-type-compare', 'filter-rating-compare', 'filter-sort-compare'].forEach(id => {
+    document.getElementById(id).addEventListener('change', applyFiltersCompare);
+  });
+
+  // --- Compare buttons (Kalkulasi) ---
   document.getElementById('btn-compare').addEventListener('click', runComparison);
-  document.getElementById('btn-compare-inter').addEventListener('click', runInterACComparison);
-  document.getElementById('btn-recalc-inter').addEventListener('click', runInterACComparison);
   document.getElementById('btn-clear-compare').addEventListener('click', clearComparison);
 
-  // --- Pagination ---
+  // --- Compare buttons (Compare View) ---
+  document.getElementById('btn-compare-inter').addEventListener('click', runInterACComparison);
+  document.getElementById('btn-recalc-inter').addEventListener('click', runInterACComparison);
+  document.getElementById('btn-clear-compare-inter').addEventListener('click', clearComparisonCompare);
+
+  // --- Pagination (Kalkulasi) ---
   document.getElementById('btn-prev').addEventListener('click', () => {
     if (state.currentPage > 1) {
       state.currentPage--;
@@ -416,10 +447,26 @@ function bindEvents() {
     }
   });
   document.getElementById('btn-next').addEventListener('click', () => {
-    const totalPages = Math.ceil(state.rekomendasi.length / state.perPage);
+    const db = state.rekomendasi;
+    const totalPages = Math.ceil(db.length / state.perPage);
     if (state.currentPage < totalPages) {
       state.currentPage++;
       renderACGrid();
+    }
+  });
+
+  // --- Pagination (Compare) ---
+  document.getElementById('btn-prev-compare').addEventListener('click', () => {
+    if (stateCompare.currentPage > 1) {
+      stateCompare.currentPage--;
+      renderACGridCompare();
+    }
+  });
+  document.getElementById('btn-next-compare').addEventListener('click', () => {
+    const totalPages = Math.ceil(stateCompare.rekomendasi.length / stateCompare.perPage);
+    if (stateCompare.currentPage < totalPages) {
+      stateCompare.currentPage++;
+      renderACGridCompare();
     }
   });
 
@@ -721,35 +768,31 @@ function runComparison() {
 }
 
 function runInterACComparison() {
-  if (state.selectedACs.length < 2) {
+  if (stateCompare.selectedACs.length < 2) {
     showToast('Pilih minimal 2 AC untuk perbandingan antar AC', 'warning');
     return;
   }
-
-  // Sembunyikan analisis standar
-  document.getElementById('analysis-active').style.display = 'none';
-  document.getElementById('analysis-content').style.display = 'none';
   
   // Tampilkan seksi baru
   const interSection = document.getElementById('analisis-inter-ac');
   interSection.style.display = 'block';
 
   // Urutkan AC berdasarkan Harga Estimasi / Harga Manual
-  const sortedACs = [...state.selectedACs].sort((a, b) => {
-    let hargaA = state.customPrices[a['No']] || estimasiHarga(a['Kapasitas Pendinginan (BTU/h)'], a['Tipe'], a['Harga (Rp)']);
-    let hargaB = state.customPrices[b['No']] || estimasiHarga(b['Kapasitas Pendinginan (BTU/h)'], b['Tipe'], b['Harga (Rp)']);
+  const sortedACs = [...stateCompare.selectedACs].sort((a, b) => {
+    let hargaA = stateCompare.customPrices[a['No']] || estimasiHarga(a['Kapasitas Pendinginan (BTU/h)'], a['Tipe'], a['Harga (Rp)']);
+    let hargaB = stateCompare.customPrices[b['No']] || estimasiHarga(b['Kapasitas Pendinginan (BTU/h)'], b['Tipe'], b['Harga (Rp)']);
     return hargaA - hargaB;
   });
 
   const baseAC = sortedACs[0];
-  const baseHarga = state.customPrices[baseAC['No']] || estimasiHarga(baseAC['Kapasitas Pendinginan (BTU/h)'], baseAC['Tipe'], baseAC['Harga (Rp)']);
+  const baseHarga = stateCompare.customPrices[baseAC['No']] || estimasiHarga(baseAC['Kapasitas Pendinginan (BTU/h)'], baseAC['Tipe'], baseAC['Harga (Rp)']);
   const baseBiaya = hitungBiayaTahunanAC(baseAC['Kapasitas Pendinginan (BTU/h)'], baseAC['Nilai Efisiensi (EER/CSPF)'], baseAC['Daya (watt)'], state.jamPerHari, state.tarifListrik);
 
   // Render Input Harga
   const inputContainer = document.getElementById('inter-ac-price-inputs');
   inputContainer.innerHTML = sortedACs.map((ac, idx) => {
-    let harga = state.customPrices[ac['No']] || estimasiHarga(ac['Kapasitas Pendinginan (BTU/h)'], ac['Tipe'], ac['Harga (Rp)']);
-    state.customPrices[ac['No']] = harga; // Pastikan tersimpan
+    let harga = stateCompare.customPrices[ac['No']] || estimasiHarga(ac['Kapasitas Pendinginan (BTU/h)'], ac['Tipe'], ac['Harga (Rp)']);
+    stateCompare.customPrices[ac['No']] = harga; // Pastikan tersimpan
 
     return `
       <div class="input-group">
@@ -767,7 +810,7 @@ function runInterACComparison() {
     input.addEventListener('change', (e) => {
       const val = parseFloat(e.target.value);
       if (!isNaN(val) && val >= 0) {
-        state.customPrices[e.target.dataset.no] = val;
+        stateCompare.customPrices[e.target.dataset.no] = val;
       }
     });
   });
@@ -779,7 +822,7 @@ function runInterACComparison() {
   // Render Hasil
   const resultsContainer = document.getElementById('inter-ac-results');
   resultsContainer.innerHTML = sortedACs.slice(1).map(ac => {
-    const harga = state.customPrices[ac['No']];
+    const harga = stateCompare.customPrices[ac['No']];
     const biaya = hitungBiayaTahunanAC(ac['Kapasitas Pendinginan (BTU/h)'], ac['Nilai Efisiensi (EER/CSPF)'], ac['Daya (watt)'], state.jamPerHari, state.tarifListrik);
     
     const incrementalInvestasi = harga - baseHarga;
@@ -2031,6 +2074,201 @@ function runInvestmentAnalysisKulkas() {
       setTimeout(() => el.classList.add('visible'), i * 100);
     });
   });
+}
+
+// ========================
+// COMPARE AC VIEW LOGIC
+// ========================
+function findRecommendationsCompare() {
+  const db = getDatabase();
+  stateCompare.rekomendasi = [...db];
+  stateCompare.currentPage = 1;
+  stateCompare.selectedACs = [];
+  
+  populateCompareFilters();
+  updateCompareBarCompare();
+  applyFiltersCompare();
+}
+
+function populateCompareFilters() {
+  const db = getDatabase();
+  const brands = [...new Set(db.map(ac => ac['Merek']).filter(Boolean))].sort();
+  const filterBrand = document.getElementById('filter-brand-compare');
+  if (filterBrand) {
+    filterBrand.innerHTML = '<option value="">Semua Merek</option>' + brands.map(b => `<option value="${b}">${b}</option>`).join('');
+  }
+}
+
+function applyFiltersCompare() {
+  let data = [...getDatabase()];
+
+  const brand = document.getElementById('filter-brand-compare').value;
+  if (brand) data = data.filter(ac => ac['Merek'] === brand);
+
+  const type = document.getElementById('filter-type-compare').value;
+  if (type) {
+    if (type === 'Inverter') {
+      data = data.filter(ac => (ac['Tipe'] || '').toLowerCase().includes('inverter') && !(ac['Tipe'] || '').toLowerCase().includes('non'));
+    } else {
+      data = data.filter(ac => (ac['Tipe'] || '').toLowerCase().includes('non'));
+    }
+  }
+
+  const rating = document.getElementById('filter-rating-compare').value;
+  if (rating) {
+    data = data.filter(ac => (ac['Rating Bintang (1-5)'] || 0) >= parseInt(rating));
+  }
+
+  const sort = document.getElementById('filter-sort-compare').value;
+  data.sort((a, b) => {
+    if (sort === 'rating-desc') return (b['Rating Bintang (1-5)'] || 0) - (a['Rating Bintang (1-5)'] || 0);
+    if (sort === 'efisiensi-desc') return (b['Nilai Efisiensi (EER/CSPF)'] || 0) - (a['Nilai Efisiensi (EER/CSPF)'] || 0);
+    if (sort === 'biaya-asc') {
+      let hargaA = estimasiHarga(a['Kapasitas Pendinginan (BTU/h)'], a['Tipe'], a['Harga (Rp)']);
+      let hargaB = estimasiHarga(b['Kapasitas Pendinginan (BTU/h)'], b['Tipe'], b['Harga (Rp)']);
+      return hargaA - hargaB;
+    }
+    return 0;
+  });
+
+  stateCompare.rekomendasi = data;
+  stateCompare.currentPage = 1;
+  
+  document.getElementById('result-count-compare').textContent = `${data.length} hasil`;
+  
+  renderACGridCompare();
+}
+
+function renderACGridCompare() {
+  const grid = document.getElementById('ac-grid-compare');
+  const pagination = document.getElementById('pagination-compare');
+  const pageInfo = document.getElementById('page-info-compare');
+
+  const start = (stateCompare.currentPage - 1) * stateCompare.perPage;
+  const end = start + stateCompare.perPage;
+  const currentData = stateCompare.rekomendasi.slice(start, end);
+
+  if (currentData.length === 0) {
+    grid.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">😔</div>
+        <h3>Tidak ada AC yang sesuai</h3>
+        <p>Coba ubah filter pencarian Anda.</p>
+      </div>
+    `;
+    pagination.style.display = 'none';
+    return;
+  }
+
+  grid.innerHTML = currentData.map((ac, index) => {
+    const isSelected = stateCompare.selectedACs.some(s => s['No'] === ac['No']);
+    const merek = ac['Merek'] || '-';
+    const model = ac['Model'] || ac['Famili'] || '-';
+    const tipe = ac['Tipe'] || '-';
+    const efisiensi = ac['Nilai Efisiensi (EER/CSPF)'] || '-';
+    const baseline = ac['Baseline'] || '';
+    const no = ac['No'] || index;
+    const btu = ac['Kapasitas Pendinginan (BTU/h)'];
+    const daya = ac['Daya (watt)'];
+    const harga = estimasiHarga(btu, tipe, ac['Harga (Rp)']);
+    
+    return `
+      <div class="ac-card animate-in ${isSelected ? 'selected' : ''}" data-ac-no="${no}" data-index="${index}">
+        <div class="ac-card-header">
+          <div class="ac-brand">${merek}</div>
+          <div class="ac-type-badge ${tipe.toLowerCase().includes('inverter') && !tipe.toLowerCase().includes('non') ? 'inverter' : 'non-inverter'}">
+            ${tipe.toLowerCase().includes('inverter') && !tipe.toLowerCase().includes('non') ? 'Inverter' : 'Non-Inverter'}
+          </div>
+        </div>
+        <div class="ac-model">${model}</div>
+        <div class="ac-stars">
+          ${'⭐'.repeat(ac['Rating Bintang (1-5)'] || 0)}
+        </div>
+        <div class="ac-specs">
+          <div class="spec">
+            <span class="spec-label">Kapasitas</span>
+            <span class="spec-value">${typeof btu === 'number' ? new Intl.NumberFormat('id-ID').format(btu) : btu} BTU/h</span>
+          </div>
+          <div class="spec">
+            <span class="spec-label">Daya</span>
+            <span class="spec-value">${typeof daya === 'number' ? new Intl.NumberFormat('id-ID').format(daya) : daya} W</span>
+          </div>
+          <div class="spec">
+            <span class="spec-label">Efisiensi</span>
+            <span class="spec-value">${typeof efisiensi === 'number' ? efisiensi.toFixed(2) : efisiensi} ${baseline}</span>
+          </div>
+          <div class="spec">
+            <span class="spec-label">Est. Harga</span>
+            <span class="spec-value biaya">Rp ${new Intl.NumberFormat('id-ID').format(harga)}</span>
+          </div>
+        </div>
+        <div class="ac-card-footer">
+          <button class="btn btn-compare-compare" data-ac-no="${no}">
+            ${isSelected ? '✓ Dipilih' : '+ Bandingkan'}
+          </button>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  // Bind compare buttons
+  grid.querySelectorAll('.btn-compare-compare').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleSelectACCompare(parseInt(btn.dataset.acNo));
+    });
+  });
+
+  const totalPages = Math.ceil(stateCompare.rekomendasi.length / stateCompare.perPage);
+  if (totalPages > 1) {
+    pagination.style.display = 'flex';
+    pageInfo.textContent = `Halaman ${stateCompare.currentPage} / ${totalPages}`;
+    document.getElementById('btn-prev-compare').disabled = stateCompare.currentPage === 1;
+    document.getElementById('btn-next-compare').disabled = stateCompare.currentPage === totalPages;
+  } else {
+    pagination.style.display = 'none';
+  }
+
+  requestAnimationFrame(() => {
+    grid.querySelectorAll('.animate-in').forEach((el, i) => {
+      setTimeout(() => el.classList.add('visible'), i * 50);
+    });
+  });
+}
+
+function toggleSelectACCompare(no) {
+  const index = stateCompare.selectedACs.findIndex(ac => ac['No'] === no);
+  if (index >= 0) {
+    stateCompare.selectedACs.splice(index, 1);
+  } else {
+    if (stateCompare.selectedACs.length >= 3) {
+      showToast('Maksimal membandingkan 3 AC', 'warning');
+      return;
+    }
+    const ac = getACById(no);
+    if (ac) stateCompare.selectedACs.push(ac);
+  }
+  updateCompareBarCompare();
+  renderACGridCompare();
+}
+
+function updateCompareBarCompare() {
+  const bar = document.getElementById('compare-bar-inter');
+  const count = document.getElementById('compare-count-inter');
+  
+  if (stateCompare.selectedACs.length > 0) {
+    bar.style.display = 'flex';
+    count.textContent = stateCompare.selectedACs.length;
+  } else {
+    bar.style.display = 'none';
+  }
+}
+
+function clearComparisonCompare() {
+  stateCompare.selectedACs = [];
+  updateCompareBarCompare();
+  renderACGridCompare();
+  document.getElementById('analisis-inter-ac').style.display = 'none';
 }
 
 // ========================
