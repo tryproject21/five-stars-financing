@@ -55,6 +55,14 @@ const state = {
   customPrices: {},      // Simpan harga custom per AC { [no]: harga }
 };
 
+const stateCompare = {
+  rekomendasi: [],
+  selectedACs: [],
+  currentPage: 1,
+  perPage: 15,
+  customPrices: {}
+};
+
 const stateLampu = {
   allRecommendationsLampu: [],
   rekomendasi: [],
