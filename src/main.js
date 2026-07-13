@@ -2480,7 +2480,7 @@ function toggleSelectACCompare(no) {
     stateCompare.selectedACs.splice(index, 1);
     // If removed AC was baseline, pick first remaining as baseline
     if (String(stateCompare.baselineNo) === noStr) {
-      stateCompare.baselineNo = stateCompare.selectedACs.length > 0 ? stateCompare.selectedACs[0]['No'] : null;
+      stateCompare.baselineNo = stateCompare.selectedACs.length > 0 ? String(stateCompare.selectedACs[0]['No']) : null;
     }
   } else {
     if (stateCompare.selectedACs.length >= 3) {
@@ -2492,12 +2492,22 @@ function toggleSelectACCompare(no) {
       stateCompare.selectedACs.push(ac);
       // First selected AC auto-becomes baseline
       if (stateCompare.selectedACs.length === 1) {
-        stateCompare.baselineNo = no;
+        stateCompare.baselineNo = noStr;
       }
     }
   }
   updateCompareBarCompare();
   renderACGridCompare();
+  
+  // Auto-update summary table if it's already visible
+  const interSection = document.getElementById('analisis-inter-ac');
+  if (interSection && interSection.style.display === 'block') {
+    if (stateCompare.selectedACs.length >= 2) {
+      runInterACComparison();
+    } else {
+      interSection.style.display = 'none';
+    }
+  }
 }
 
 function setBaselineCompare(no) {
@@ -2509,6 +2519,12 @@ function setBaselineCompare(no) {
   }
   updateCompareBarCompare();
   renderACGridCompare();
+  
+  // Auto-update summary table if it's already visible
+  const interSection = document.getElementById('analisis-inter-ac');
+  if (interSection && interSection.style.display === 'block') {
+    runInterACComparison();
+  }
 }
 
 function updateCompareBarCompare() {
