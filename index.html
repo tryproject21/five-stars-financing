@@ -641,25 +641,65 @@
       <!-- NEW SECTION: Perbandingan Antar AC Baru -->
       <section id="analisis-inter-ac" class="section" style="display:none;">
         <div class="section-header">
-          <h2 class="section-title">Upgrade ROI (Antar AC Baru)</h2>
-          <p class="section-subtitle">Analisis kelayakan investasi jika Anda memilih tipe AC yang lebih efisien dibandingkan tipe AC standar/termurah dari pilihan Anda.</p>
+          <h2 class="section-title">Perbandingan <span class="gradient-text">Produk AC</span></h2>
+          <p class="section-subtitle">Analisis kelayakan investasi & kinerja antar AC yang Anda pilih. AC termurah otomatis menjadi baseline.</p>
         </div>
 
         <div class="container">
-          <!-- Input Harga Manual -->
-          <div class="glass-card mb-2">
-            <h3 style="margin-bottom: 1rem; font-size: 1.1rem; color: var(--text-primary);">Sesuaikan Harga Aktual (Opsional)</h3>
-            <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1rem;">Harga di bawah adalah estimasi. Anda dapat mengubahnya dengan harga toko aktual untuk analisis yang lebih akurat.</p>
-            <div id="inter-ac-price-inputs" class="grid-2">
-              <!-- Diisi dari JS -->
-            </div>
-            <div style="margin-top: 1rem; text-align: right;">
-              <button id="btn-recalc-inter" class="btn btn-primary btn-sm">Hitung Ulang</button>
+          <!-- Parameter Analisis -->
+          <div class="glass-card mb-2 animate-in">
+            <h3 style="margin-bottom: 1rem; font-size: 1.1rem; color: var(--text-primary);">⚙️ Parameter Analisis</h3>
+            <div class="grid-2" style="gap: 1rem;">
+              <div class="input-group">
+                <label for="inter-jam-per-hari">Jam Pemakaian / Hari</label>
+                <div class="input-with-unit">
+                  <input type="number" id="inter-jam-per-hari" value="8" min="1" max="24" />
+                  <span class="unit">Jam</span>
+                </div>
+              </div>
+              <div class="input-group">
+                <label for="inter-tarif-listrik">Tarif Listrik</label>
+                <div class="input-with-unit">
+                  <input type="number" id="inter-tarif-listrik" value="1444" min="100" step="100" />
+                  <span class="unit">Rp/kWh</span>
+                </div>
+              </div>
+              <div class="input-group">
+                <label for="inter-umur-ekonomis">Umur Ekonomis</label>
+                <div class="input-with-unit">
+                  <input type="number" id="inter-umur-ekonomis" value="5" min="1" max="20" />
+                  <span class="unit">Tahun</span>
+                </div>
+              </div>
+              <div class="input-group">
+                <label for="inter-discount-rate">Suku Bunga Diskonto</label>
+                <div class="input-with-unit">
+                  <input type="number" id="inter-discount-rate" value="6" min="0" max="30" step="0.5" />
+                  <span class="unit">%</span>
+                </div>
+              </div>
             </div>
           </div>
 
+          <!-- Input Harga Manual -->
+          <div class="glass-card mb-2 animate-in">
+            <h3 style="margin-bottom: 1rem; font-size: 1.1rem; color: var(--text-primary);">💰 Harga AC (Estimasi / Aktual)</h3>
+            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;">Harga di bawah adalah estimasi. Anda dapat mengubahnya dengan harga toko aktual untuk analisis yang lebih akurat.</p>
+            <div id="inter-ac-price-inputs" class="grid-2" style="gap: 1rem;">
+              <!-- Diisi dari JS -->
+            </div>
+            <div style="margin-top: 1.25rem; text-align: right;">
+              <button id="btn-recalc-inter" class="btn btn-primary btn-sm">🔄 Hitung Ulang</button>
+            </div>
+          </div>
+
+          <!-- Tabel Ringkasan Perbandingan -->
+          <div class="glass-card mb-2 animate-in" id="inter-ac-summary-table">
+            <!-- Diisi dari JS -->
+          </div>
+
           <!-- Hasil Analisis Antar AC -->
-          <div id="inter-ac-results" class="grid-2">
+          <div id="inter-ac-results">
             <!-- Diisi dari JS -->
           </div>
         </div>

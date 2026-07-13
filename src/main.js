@@ -779,36 +779,53 @@ function hitungBiayaTahunanAC(btu, efisiensi, dayaWatt, jamPerHari, tarif) {
   return (dayaWatt / 1000) * jamPerHari * 365 * tarif;
 }
 
+function getInterParams() {
+  return {
+    jamPerHari: parseInt(document.getElementById('inter-jam-per-hari').value) || 8,
+    tarif: parseFloat(document.getElementById('inter-tarif-listrik').value) || 1444,
+    umurEkonomis: parseInt(document.getElementById('inter-umur-ekonomis').value) || 5,
+    discountRate: (parseFloat(document.getElementById('inter-discount-rate').value) || 6) / 100
+  };
+}
+
+function getHargaAC(ac) {
+  return stateCompare.customPrices[ac['No']] || estimasiHarga(ac['Kapasitas Pendinginan (BTU/h)'], ac['Tipe'], ac['Harga (Rp)']);
+}
+
 function runInterACComparison() {
   if (stateCompare.selectedACs.length < 2) {
     showToast('Pilih minimal 2 AC untuk perbandingan antar AC', 'warning');
     return;
   }
   
-  // Tampilkan seksi baru
   const interSection = document.getElementById('analisis-inter-ac');
   interSection.style.display = 'block';
 
-  // Urutkan AC berdasarkan Harga Estimasi / Harga Manual
-  const sortedACs = [...stateCompare.selectedACs].sort((a, b) => {
-    let hargaA = stateCompare.customPrices[a['No']] || estimasiHarga(a['Kapasitas Pendinginan (BTU/h)'], a['Tipe'], a['Harga (Rp)']);
-    let hargaB = stateCompare.customPrices[b['No']] || estimasiHarga(b['Kapasitas Pendinginan (BTU/h)'], b['Tipe'], b['Harga (Rp)']);
-    return hargaA - hargaB;
-  });
+  const params = getInterParams();
+
+  // Sort by price (cheapest = baseline)
+  const sortedACs = [...stateCompare.selectedACs].sort((a, b) => getHargaAC(a) - getHargaAC(b));
 
   const baseAC = sortedACs[0];
-  const baseHarga = stateCompare.customPrices[baseAC['No']] || estimasiHarga(baseAC['Kapasitas Pendinginan (BTU/h)'], baseAC['Tipe'], baseAC['Harga (Rp)']);
-  const baseBiaya = hitungBiayaTahunanAC(baseAC['Kapasitas Pendinginan (BTU/h)'], baseAC['Nilai Efisiensi (EER/CSPF)'], baseAC['Daya (watt)'], state.jamPerHari, state.tarifListrik);
+  const baseHarga = getHargaAC(baseAC);
+  const baseBiaya = hitungBiayaTahunanAC(baseAC['Kapasitas Pendinginan (BTU/h)'], baseAC['Nilai Efisiensi (EER/CSPF)'], baseAC['Daya (watt)'], params.jamPerHari, params.tarif);
 
-  // Render Input Harga
+  // Store prices
+  sortedACs.forEach(ac => {
+    if (!stateCompare.customPrices[ac['No']]) {
+      stateCompare.customPrices[ac['No']] = getHargaAC(ac);
+    }
+  });
+
+  // Render price inputs
   const inputContainer = document.getElementById('inter-ac-price-inputs');
   inputContainer.innerHTML = sortedACs.map((ac, idx) => {
-    let harga = stateCompare.customPrices[ac['No']] || estimasiHarga(ac['Kapasitas Pendinginan (BTU/h)'], ac['Tipe'], ac['Harga (Rp)']);
-    stateCompare.customPrices[ac['No']] = harga; // Pastikan tersimpan
-
+    const harga = getHargaAC(ac);
+    stateCompare.customPrices[ac['No']] = harga;
+    const isBase = idx === 0;
     return `
       <div class="input-group">
-        <label>${idx === 0 ? '[AC BASELINE] ' : ''}${ac['Merek']} - ${ac['Model'] || ac['Famili']}</label>
+        <label style="${isBase ? 'color: var(--accent-cyan); font-weight: 700;' : ''}">${isBase ? '🏷️ BASELINE — ' : ''}${ac['Merek']} — ${ac['Model'] || ac['Famili'] || '-'}</label>
         <div class="input-with-unit">
           <span class="unit">Rp</span>
           <input type="number" class="manual-price-input" data-no="${ac['No']}" value="${harga}" min="0" step="100000">
@@ -817,7 +834,6 @@ function runInterACComparison() {
     `;
   }).join('');
 
-  // Pasang listener untuk input
   inputContainer.querySelectorAll('.manual-price-input').forEach(input => {
     input.addEventListener('change', (e) => {
       const val = parseFloat(e.target.value);
@@ -827,91 +843,269 @@ function runInterACComparison() {
     });
   });
 
-  // Ambil parameter dari form
-  const umurEkonomis = parseInt(document.getElementById('input-umur-ekonomis').value) || 5;
-  const discountRate = parseFloat(document.getElementById('input-discount-rate').value) / 100 || 0.10;
+  // === BUILD SUMMARY TABLE ===
+  const summaryData = sortedACs.map((ac, idx) => {
+    const harga = getHargaAC(ac);
+    const btu = ac['Kapasitas Pendinginan (BTU/h)'];
+    const daya = ac['Daya (watt)'];
+    const efisiensi = ac['Nilai Efisiensi (EER/CSPF)'] || 0;
+    const baseline = ac['Baseline'] || '';
+    const rating = ac['Rating Bintang (1-5)'] || 0;
+    const tipe = ac['Tipe'] || '-';
+    const biayaTahunan = hitungBiayaTahunanAC(btu, efisiensi, daya, params.jamPerHari, params.tarif);
+    const isBase = idx === 0;
 
-  // Render Hasil
+    // vs baseline
+    const selisihHarga = harga - baseHarga;
+    const penghematan = baseBiaya - biayaTahunan;
+
+    let payback = '-';
+    let npv = 0;
+    let irr = 0;
+    let keputusan = '-';
+    let statusClass = '';
+
+    if (!isBase && selisihHarga > 0 && penghematan > 0) {
+      const analysis = fullAnalysis(selisihHarga, penghematan, params.umurEkonomis, params.discountRate);
+      payback = analysis.paybackPeriod === Infinity || analysis.paybackPeriod < 0 ? '∞' : analysis.paybackPeriod.toFixed(1);
+      npv = analysis.npv;
+      irr = analysis.irr;
+      keputusan = analysis.kelayakan.keputusan;
+      statusClass = analysis.kelayakan.status === 'go' ? 'positive' : 'negative';
+    } else if (!isBase && selisihHarga <= 0 && penghematan >= 0) {
+      keputusan = 'NO-BRAINER ✓';
+      statusClass = 'positive';
+    } else if (!isBase) {
+      keputusan = 'TIDAK LAYAK';
+      statusClass = 'negative';
+    }
+
+    return { ac, harga, btu, daya, efisiensi, baseline, rating, tipe, biayaTahunan, isBase, selisihHarga, penghematan, payback, npv, irr, keputusan, statusClass };
+  });
+
+  // Render Summary Table
+  const summaryContainer = document.getElementById('inter-ac-summary-table');
+  summaryContainer.innerHTML = `
+    <h3 style="margin-bottom: 1rem; font-size: 1.1rem; color: var(--text-primary);">📊 Ringkasan Perbandingan</h3>
+    <div style="overflow-x: auto;">
+      <table class="comparison-table">
+        <thead>
+          <tr>
+            <th style="text-align:left; min-width: 140px;">Spesifikasi</th>
+            ${sortedACs.map((ac, i) => `
+              <th style="min-width: 150px;">
+                <div style="font-size: 0.75rem; color: var(--accent-cyan); text-transform: uppercase;">${ac['Merek']}</div>
+                <div style="font-size: 0.8rem; margin-top: 0.2rem;">${ac['Model'] || ac['Famili'] || '-'}</div>
+                ${i === 0 ? '<div style="font-size: 0.65rem; margin-top: 0.3rem; background: linear-gradient(135deg, var(--accent-cyan), var(--accent-teal)); color: #000; padding: 0.15rem 0.5rem; border-radius: 20px; display: inline-block; font-weight: 700;">BASELINE</div>' : ''}
+              </th>
+            `).join('')}
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Tipe</strong></td>
+            ${summaryData.map(d => `<td>${d.tipe}</td>`).join('')}
+          </tr>
+          <tr>
+            <td><strong>Rating</strong></td>
+            ${summaryData.map(d => `<td>${'⭐'.repeat(d.rating)}</td>`).join('')}
+          </tr>
+          <tr>
+            <td><strong>Kapasitas</strong></td>
+            ${summaryData.map(d => `<td>${typeof d.btu === 'number' ? new Intl.NumberFormat('id-ID').format(d.btu) : d.btu} BTU/h</td>`).join('')}
+          </tr>
+          <tr>
+            <td><strong>Daya</strong></td>
+            ${summaryData.map(d => `<td>${typeof d.daya === 'number' ? new Intl.NumberFormat('id-ID').format(d.daya) : d.daya} W</td>`).join('')}
+          </tr>
+          <tr>
+            <td><strong>Efisiensi</strong></td>
+            ${summaryData.map(d => `<td>${typeof d.efisiensi === 'number' ? d.efisiensi.toFixed(2) : d.efisiensi} ${d.baseline}</td>`).join('')}
+          </tr>
+          <tr class="highlight-row">
+            <td><strong>Harga</strong></td>
+            ${summaryData.map(d => `<td style="font-weight: 700;">Rp ${new Intl.NumberFormat('id-ID').format(d.harga)}</td>`).join('')}
+          </tr>
+          <tr class="highlight-row">
+            <td><strong>Biaya Listrik/Thn</strong></td>
+            ${summaryData.map(d => `<td>Rp ${new Intl.NumberFormat('id-ID').format(Math.round(d.biayaTahunan))}</td>`).join('')}
+          </tr>
+          <tr>
+            <td><strong>Biaya Listrik/Bln</strong></td>
+            ${summaryData.map(d => `<td>Rp ${new Intl.NumberFormat('id-ID').format(Math.round(d.biayaTahunan / 12))}</td>`).join('')}
+          </tr>
+          <tr class="separator-row">
+            <td colspan="${sortedACs.length + 1}" style="padding: 0.25rem;"></td>
+          </tr>
+          <tr>
+            <td><strong>Selisih Harga vs Baseline</strong></td>
+            ${summaryData.map(d => `<td>${d.isBase ? '-' : 'Rp ' + new Intl.NumberFormat('id-ID').format(d.selisihHarga)}</td>`).join('')}
+          </tr>
+          <tr>
+            <td><strong>Penghematan Listrik/Thn</strong></td>
+            ${summaryData.map(d => `<td class="${d.isBase ? '' : d.penghematan > 0 ? 'positive' : 'negative'}">${d.isBase ? '-' : 'Rp ' + new Intl.NumberFormat('id-ID').format(Math.round(d.penghematan))}</td>`).join('')}
+          </tr>
+          <tr>
+            <td><strong>Payback Period</strong></td>
+            ${summaryData.map(d => `<td>${d.isBase ? '-' : d.payback + ' thn'}</td>`).join('')}
+          </tr>
+          <tr>
+            <td><strong>NPV</strong></td>
+            ${summaryData.map(d => `<td class="${d.isBase ? '' : d.npv >= 0 ? 'positive' : 'negative'}">${d.isBase ? '-' : 'Rp ' + new Intl.NumberFormat('id-ID').format(Math.round(d.npv))}</td>`).join('')}
+          </tr>
+          <tr>
+            <td><strong>IRR</strong></td>
+            ${summaryData.map(d => `<td class="${d.isBase ? '' : d.statusClass}">${d.isBase ? '-' : (d.irr * 100).toFixed(1) + '%'}</td>`).join('')}
+          </tr>
+          <tr class="verdict-row">
+            <td><strong>Keputusan Upgrade</strong></td>
+            ${summaryData.map(d => `<td><span class="verdict-badge-inline ${d.statusClass}" style="font-size: 0.75rem;">${d.isBase ? 'BASELINE' : d.keputusan}</span></td>`).join('')}
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  `;
+
+  // === BUILD DETAILED ANALYSIS CARDS ===
   const resultsContainer = document.getElementById('inter-ac-results');
-  resultsContainer.innerHTML = sortedACs.slice(1).map(ac => {
-    const harga = stateCompare.customPrices[ac['No']];
-    const biaya = hitungBiayaTahunanAC(ac['Kapasitas Pendinginan (BTU/h)'], ac['Nilai Efisiensi (EER/CSPF)'], ac['Daya (watt)'], state.jamPerHari, state.tarifListrik);
+  
+  const cardsHTML = summaryData.filter(d => !d.isBase).map(d => {
+    const { ac, harga, btu, daya, efisiensi, baseline, rating, tipe, biayaTahunan, selisihHarga, penghematan, payback, npv, irr, keputusan, statusClass } = d;
+
+    const biayaBulanan = Math.round(biayaTahunan / 12);
+    const baseBulanan = Math.round(baseBiaya / 12);
+    const hematBulanan = baseBulanan - biayaBulanan;
     
-    const incrementalInvestasi = harga - baseHarga;
-    const incrementalPenghematan = baseBiaya - biaya; // Jika AC ini lebih murah listriknya, penghematan positif
+    const isLayak = statusClass === 'positive';
+    const cardBorder = isLayak ? 'rgba(0, 191, 165, 0.4)' : 'rgba(255, 82, 82, 0.4)';
+    const cardGlow = isLayak ? 'rgba(0, 191, 165, 0.1)' : 'rgba(255, 82, 82, 0.1)';
 
-    let cardHTML = '';
+    return `
+      <div class="glass-card mb-2 animate-in" style="border-color: ${cardBorder}; box-shadow: 0 8px 32px ${cardGlow};">
+        <!-- Header -->
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.5rem;">
+          <div>
+            <div style="font-size: 0.75rem; color: var(--accent-cyan); text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em;">${ac['Merek']}</div>
+            <div style="font-size: 1.1rem; font-weight: 700; color: var(--text-primary); margin-top: 0.25rem;">${ac['Model'] || ac['Famili'] || '-'}</div>
+            <div style="margin-top: 0.35rem;">${'⭐'.repeat(rating)} <span style="font-size: 0.8rem; color: var(--text-muted);">${tipe}</span></div>
+          </div>
+          <span class="verdict-badge ${isLayak ? 'layak' : 'tidak-layak'}" style="font-size: 0.8rem; padding: 0.35rem 1rem;">${keputusan}</span>
+        </div>
 
-    if (incrementalInvestasi <= 0) {
-      // Kasus aneh: Harga lebih murah/sama, tapi listrik lebih hemat? Itu No-Brainer!
-      if (incrementalPenghematan >= 0) {
-        cardHTML = `
-          <div class="glass-card result-card success">
-            <h3 style="margin-bottom:0.5rem;">Upgrade ke ${ac['Merek']}</h3>
-            <p style="font-size:0.9rem; margin-bottom:1rem; opacity:0.8;">AC ini lebih murah/sama harganya, dan biaya listriknya lebih hemat! (Pilihan Pasti)</p>
-            <div class="result-number">LAYAK (NO-BRAINER)</div>
-          </div>
-        `;
-      } else {
-        cardHTML = `
-          <div class="glass-card result-card warning">
-            <h3 style="margin-bottom:0.5rem;">Upgrade ke ${ac['Merek']}</h3>
-            <p style="font-size:0.9rem; margin-bottom:1rem; opacity:0.8;">AC ini lebih murah/sama harganya, tapi listriknya lebih boros.</p>
-            <div class="result-number" style="color:var(--warning)">TIDAK DISARANKAN</div>
-          </div>
-        `;
-      }
-    } else {
-      // Normal case: Harga lebih mahal, hitung kelayakan dari penghematan
-      const analysis = fullAnalysis(incrementalInvestasi, incrementalPenghematan, umurEkonomis, discountRate);
-      const layak = analysis.kelayakan.status === 'go';
-      
-      cardHTML = `
-        <div class="glass-card result-card ${layak ? 'success' : 'danger'}">
-          <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1rem;">
-            <h3>Upgrade ke ${ac['Merek']}</h3>
-            <span class="badge ${layak ? 'success' : 'danger'}">${analysis.kelayakan.keputusan}</span>
-          </div>
-          <p style="font-size:0.8rem; margin-bottom:1rem; opacity:0.8;">Melawan Baseline: ${baseAC['Merek']}</p>
-          
-          <div class="metrics-grid" style="margin-bottom:1rem;">
-            <div class="metric">
-              <span class="metric-label">Selisih Investasi</span>
-              <span class="metric-value">Rp ${new Intl.NumberFormat('id-ID').format(incrementalInvestasi)}</span>
+        <!-- Kinerja -->
+        <div style="margin-bottom: 1.25rem;">
+          <h4 style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em;">📐 Kinerja & Spesifikasi</h4>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 0.75rem;">
+            <div class="metric-mini">
+              <span class="metric-mini-label">Kapasitas</span>
+              <span class="metric-mini-value">${typeof btu === 'number' ? new Intl.NumberFormat('id-ID').format(btu) : btu} BTU/h</span>
             </div>
-            <div class="metric">
-              <span class="metric-label">Penghematan/Thn</span>
-              <span class="metric-value">Rp ${new Intl.NumberFormat('id-ID').format(incrementalPenghematan)}</span>
+            <div class="metric-mini">
+              <span class="metric-mini-label">Daya Listrik</span>
+              <span class="metric-mini-value">${typeof daya === 'number' ? new Intl.NumberFormat('id-ID').format(daya) : daya} W</span>
             </div>
-          </div>
-
-          <div class="metrics-grid">
-            <div class="metric">
-              <span class="metric-label">Simple Payback</span>
-              <span class="metric-value">${analysis.paybackPeriod === Infinity || analysis.paybackPeriod < 0 ? '-' : analysis.paybackPeriod.toFixed(1)} thn</span>
+            <div class="metric-mini">
+              <span class="metric-mini-label">Efisiensi</span>
+              <span class="metric-mini-value">${typeof efisiensi === 'number' ? efisiensi.toFixed(2) : efisiensi} ${baseline}</span>
             </div>
-            <div class="metric">
-              <span class="metric-label">NPV</span>
-              <span class="metric-value">${new Intl.NumberFormat('id-ID').format(Math.round(analysis.npv))}</span>
-            </div>
-            <div class="metric">
-              <span class="metric-label">IRR</span>
-              <span class="metric-value">${(analysis.irr * 100).toFixed(1)}%</span>
+            <div class="metric-mini">
+              <span class="metric-mini-label">Listrik/Bulan</span>
+              <span class="metric-mini-value">Rp ${new Intl.NumberFormat('id-ID').format(biayaBulanan)}</span>
             </div>
           </div>
         </div>
-      `;
-    }
 
-    return cardHTML;
+        <!-- Investasi -->
+        <div>
+          <h4 style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em;">💰 Analisis Investasi vs Baseline</h4>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 0.75rem;">
+            <div class="metric-mini">
+              <span class="metric-mini-label">Harga AC</span>
+              <span class="metric-mini-value" style="color: var(--text-primary);">Rp ${new Intl.NumberFormat('id-ID').format(harga)}</span>
+            </div>
+            <div class="metric-mini">
+              <span class="metric-mini-label">Selisih Harga</span>
+              <span class="metric-mini-value ${selisihHarga <= 0 ? 'positive' : ''}" style="color: ${selisihHarga <= 0 ? 'var(--accent-teal)' : 'var(--text-primary)'};">Rp ${new Intl.NumberFormat('id-ID').format(selisihHarga)}</span>
+            </div>
+            <div class="metric-mini">
+              <span class="metric-mini-label">Hemat Listrik/Thn</span>
+              <span class="metric-mini-value ${penghematan > 0 ? 'positive' : 'negative'}">${penghematan > 0 ? '+' : ''}Rp ${new Intl.NumberFormat('id-ID').format(Math.round(penghematan))}</span>
+            </div>
+            <div class="metric-mini">
+              <span class="metric-mini-label">Hemat Listrik/Bln</span>
+              <span class="metric-mini-value ${hematBulanan > 0 ? 'positive' : 'negative'}">${hematBulanan > 0 ? '+' : ''}Rp ${new Intl.NumberFormat('id-ID').format(hematBulanan)}</span>
+            </div>
+            <div class="metric-mini">
+              <span class="metric-mini-label">Simple Payback</span>
+              <span class="metric-mini-value">${payback === '-' ? '-' : payback + ' tahun'}</span>
+            </div>
+            <div class="metric-mini">
+              <span class="metric-mini-label">NPV</span>
+              <span class="metric-mini-value ${npv >= 0 ? 'positive' : 'negative'}">Rp ${new Intl.NumberFormat('id-ID').format(Math.round(npv))}</span>
+            </div>
+            <div class="metric-mini">
+              <span class="metric-mini-label">IRR</span>
+              <span class="metric-mini-value ${statusClass}">${(irr * 100).toFixed(1)}%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
   }).join('');
 
-  if (sortedACs.length < 2) {
-    resultsContainer.innerHTML = '<p>Pilih minimal 2 AC untuk dianalisis.</p>';
-  }
+  // Baseline card
+  const baseData = summaryData[0];
+  const baseBiayaBulanan = Math.round(baseBiaya / 12);
+  
+  resultsContainer.innerHTML = `
+    <div class="glass-card mb-2 animate-in" style="border-color: rgba(0, 229, 255, 0.4); box-shadow: 0 8px 32px rgba(0, 229, 255, 0.1);">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
+        <div>
+          <div style="font-size: 0.75rem; color: var(--accent-cyan); text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em;">${baseAC['Merek']}</div>
+          <div style="font-size: 1.1rem; font-weight: 700; color: var(--text-primary); margin-top: 0.25rem;">${baseAC['Model'] || baseAC['Famili'] || '-'}</div>
+          <div style="margin-top: 0.35rem;">${'⭐'.repeat(baseData.rating)} <span style="font-size: 0.8rem; color: var(--text-muted);">${baseData.tipe}</span></div>
+        </div>
+        <span style="font-size: 0.8rem; padding: 0.35rem 1rem; background: linear-gradient(135deg, var(--accent-cyan), var(--accent-teal)); color: #000; border-radius: 20px; font-weight: 700;">🏷️ BASELINE (Termurah)</span>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 0.75rem;">
+        <div class="metric-mini">
+          <span class="metric-mini-label">Harga</span>
+          <span class="metric-mini-value">Rp ${new Intl.NumberFormat('id-ID').format(baseHarga)}</span>
+        </div>
+        <div class="metric-mini">
+          <span class="metric-mini-label">Kapasitas</span>
+          <span class="metric-mini-value">${typeof baseData.btu === 'number' ? new Intl.NumberFormat('id-ID').format(baseData.btu) : baseData.btu} BTU/h</span>
+        </div>
+        <div class="metric-mini">
+          <span class="metric-mini-label">Daya</span>
+          <span class="metric-mini-value">${typeof baseData.daya === 'number' ? new Intl.NumberFormat('id-ID').format(baseData.daya) : baseData.daya} W</span>
+        </div>
+        <div class="metric-mini">
+          <span class="metric-mini-label">Efisiensi</span>
+          <span class="metric-mini-value">${typeof baseData.efisiensi === 'number' ? baseData.efisiensi.toFixed(2) : baseData.efisiensi} ${baseData.baseline}</span>
+        </div>
+        <div class="metric-mini">
+          <span class="metric-mini-label">Listrik/Bulan</span>
+          <span class="metric-mini-value">Rp ${new Intl.NumberFormat('id-ID').format(baseBiayaBulanan)}</span>
+        </div>
+        <div class="metric-mini">
+          <span class="metric-mini-label">Listrik/Tahun</span>
+          <span class="metric-mini-value">Rp ${new Intl.NumberFormat('id-ID').format(Math.round(baseBiaya))}</span>
+        </div>
+      </div>
+    </div>
+    ${cardsHTML}
+  `;
+
+  // Animate in
+  requestAnimationFrame(() => {
+    document.querySelectorAll('#analisis-inter-ac .animate-in').forEach((el, i) => {
+      setTimeout(() => el.classList.add('visible'), i * 100);
+    });
+  });
 
   scrollToSection('analisis-inter-ac');
-  showToast('Analisis Antar AC Siap!', 'success');
+  showToast('Analisis Perbandingan Produk AC Siap!', 'success');
 }
 
 // ========================
