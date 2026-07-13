@@ -2440,8 +2440,8 @@ function renderACGridCompare() {
           </div>
         </div>
         <div class="ac-card-footer">
-          <button class="btn btn-compare-compare" data-ac-no="${no}">
-            ${isSelected ? '✓ Dipilih' : '+ Bandingkan'}
+          <button class="btn btn-compare-compare" data-ac-no="${no}" style="${isSelected ? 'background: rgba(255, 59, 48, 0.1); color: #ff3b30; border-color: rgba(255, 59, 48, 0.3);' : ''}">
+            ${isSelected ? '✗ Batal Pilih' : '+ Bandingkan'}
           </button>
           ${isSelected && !isBaseline ? `<button class="btn btn-set-baseline" data-ac-no="${no}">🏷️ Jadikan Baseline</button>` : ''}
         </div>
