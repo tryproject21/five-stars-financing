@@ -2407,7 +2407,7 @@ function renderACGridCompare() {
           </div>
         </div>
         <div class="ac-card-body">
-          <div class="ac-model">${model}</div>
+          <h3 class="ac-model" title="${model}">${model.length > 50 ? model.substring(0, 50) + '...' : model}</h3>
           <div class="ac-stars">
             ${'⭐'.repeat(ac['Rating Bintang (1-5)'] || 0)}
           </div>
@@ -2420,13 +2420,12 @@ function renderACGridCompare() {
               <span class="spec-label">Daya</span>
               <span class="spec-value">${typeof daya === 'number' ? new Intl.NumberFormat('id-ID').format(daya) : daya} W</span>
             </div>
-            <div class="spec">
-              <span class="spec-label">Efisiensi</span>
-              <span class="spec-value">${typeof efisiensi === 'number' ? efisiensi.toFixed(2) : efisiensi} ${baseline}</span>
-            </div>
-            <div class="spec">
-              <span class="spec-label">Est. Harga</span>
-              <span class="spec-value biaya">Rp ${new Intl.NumberFormat('id-ID').format(harga)}</span>
+            <div class="spec" style="grid-column: 1 / -1; margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px dashed var(--glass-border);">
+              <span class="spec-label">Efisiensi & Harga</span>
+              <span class="spec-value">
+                <span style="color:var(--text-primary)">${typeof efisiensi === 'number' ? efisiensi.toFixed(2) : efisiensi} ${baseline}</span>
+                <span style="float:right; color:var(--accent-teal)">Rp ${new Intl.NumberFormat('id-ID').format(harga)}</span>
+              </span>
             </div>
           </div>
         </div>
