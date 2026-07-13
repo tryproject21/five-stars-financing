@@ -712,7 +712,8 @@ function renderACGrid() {
 // COMPARE / SELECT
 // ========================
 function toggleSelectAC(no) {
-  const idx = state.selectedACs.findIndex(ac => ac['No'] === no);
+  const noStr = String(no);
+  const idx = state.selectedACs.findIndex(ac => String(ac['No']) === noStr);
   if (idx >= 0) {
     state.selectedACs.splice(idx, 1);
   } else {
@@ -805,12 +806,12 @@ function runInterACComparison() {
   const params = getInterParams();
 
   // Use selected baseline, fallback to cheapest
-  let baseAC = stateCompare.selectedACs.find(ac => ac['No'] === stateCompare.baselineNo);
+  let baseAC = stateCompare.selectedACs.find(ac => String(ac['No']) === String(stateCompare.baselineNo));
   if (!baseAC) {
     baseAC = [...stateCompare.selectedACs].sort((a, b) => getHargaAC(a) - getHargaAC(b))[0];
     stateCompare.baselineNo = baseAC['No'];
   }
-  const otherACs = stateCompare.selectedACs.filter(ac => ac['No'] !== baseAC['No']);
+  const otherACs = stateCompare.selectedACs.filter(ac => String(ac['No']) !== String(baseAC['No']));
   const sortedACs = [baseAC, ...otherACs];
 
   const baseHarga = getHargaAC(baseAC);
@@ -2385,8 +2386,8 @@ function renderACGridCompare() {
   }
 
   grid.innerHTML = currentData.map((ac, index) => {
-    const isSelected = stateCompare.selectedACs.some(s => s['No'] === ac['No']);
-    const isBaseline = stateCompare.baselineNo === ac['No'];
+    const isSelected = stateCompare.selectedACs.some(s => String(s['No']) === String(ac['No']));
+    const isBaseline = String(stateCompare.baselineNo) === String(ac['No']);
     const merek = ac['Merek'] || '-';
     const model = ac['Model'] || ac['Famili'] || '-';
     const tipe = ac['Tipe'] || '-';
@@ -2473,11 +2474,12 @@ function renderACGridCompare() {
 }
 
 function toggleSelectACCompare(no) {
-  const index = stateCompare.selectedACs.findIndex(ac => ac['No'] === no);
+  const noStr = String(no);
+  const index = stateCompare.selectedACs.findIndex(ac => String(ac['No']) === noStr);
   if (index >= 0) {
     stateCompare.selectedACs.splice(index, 1);
     // If removed AC was baseline, pick first remaining as baseline
-    if (stateCompare.baselineNo === no) {
+    if (String(stateCompare.baselineNo) === noStr) {
       stateCompare.baselineNo = stateCompare.selectedACs.length > 0 ? stateCompare.selectedACs[0]['No'] : null;
     }
   } else {
@@ -2499,8 +2501,9 @@ function toggleSelectACCompare(no) {
 }
 
 function setBaselineCompare(no) {
-  stateCompare.baselineNo = no;
-  const ac = stateCompare.selectedACs.find(a => a['No'] === no);
+  const noStr = String(no);
+  stateCompare.baselineNo = noStr;
+  const ac = stateCompare.selectedACs.find(a => String(a['No']) === noStr);
   if (ac) {
     showToast(`${ac['Merek']} — ${ac['Model'] || ac['Famili'] || ''} dijadikan Baseline!`, 'success');
   }
@@ -2518,7 +2521,7 @@ function updateCompareBarCompare() {
     count.textContent = stateCompare.selectedACs.length;
     // Show baseline info
     if (baselineInfo) {
-      const baseAC = stateCompare.selectedACs.find(ac => ac['No'] === stateCompare.baselineNo);
+      const baseAC = stateCompare.selectedACs.find(ac => String(ac['No']) === String(stateCompare.baselineNo));
       baselineInfo.textContent = baseAC ? `Baseline: ${baseAC['Merek']} ${baseAC['Model'] || baseAC['Famili'] || ''}` : '';
       baselineInfo.style.display = baseAC ? 'block' : 'none';
     }
