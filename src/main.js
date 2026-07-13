@@ -832,7 +832,10 @@ function runInterACComparison() {
     const isBase = idx === 0;
     return `
       <div class="input-group">
-        <label style="${isBase ? 'color: var(--accent-cyan); font-weight: 700;' : ''}">${isBase ? '🏷️ BASELINE — ' : ''}${ac['Merek']} — ${ac['Model'] || ac['Famili'] || '-'}</label>
+        <label style="display:flex; justify-content:space-between; align-items:center; ${isBase ? 'color: var(--accent-cyan); font-weight: 700;' : ''}">
+          <span>${isBase ? '🏷️ BASELINE — ' : ''}${ac['Merek']} — ${ac['Model'] || ac['Famili'] || '-'}</span>
+          ${!isBase ? `<button class="btn btn-outline btn-sm btn-make-baseline-inter" data-no="${ac['No']}" style="padding:0.2rem 0.5rem; font-size:0.7rem; border-color:var(--accent-amber); color:var(--accent-amber);">Jadikan Baseline</button>` : ''}
+        </label>
         <div class="input-with-unit">
           <span class="unit">Rp</span>
           <input type="number" class="manual-price-input" data-no="${ac['No']}" value="${harga}" min="0" step="100000">
@@ -847,6 +850,12 @@ function runInterACComparison() {
       if (!isNaN(val) && val >= 0) {
         stateCompare.customPrices[e.target.dataset.no] = val;
       }
+    });
+  });
+
+  inputContainer.querySelectorAll('.btn-make-baseline-inter').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      setBaselineCompare(e.target.dataset.no);
     });
   });
 
