@@ -60,7 +60,8 @@ const stateCompare = {
   selectedACs: [],
   currentPage: 1,
   perPage: 15,
-  customPrices: {}
+  customPrices: {},
+  baselineNo: null
 };
 
 const stateLampu = {
@@ -803,10 +804,15 @@ function runInterACComparison() {
 
   const params = getInterParams();
 
-  // Sort by price (cheapest = baseline)
-  const sortedACs = [...stateCompare.selectedACs].sort((a, b) => getHargaAC(a) - getHargaAC(b));
+  // Use selected baseline, fallback to cheapest
+  let baseAC = stateCompare.selectedACs.find(ac => ac['No'] === stateCompare.baselineNo);
+  if (!baseAC) {
+    baseAC = [...stateCompare.selectedACs].sort((a, b) => getHargaAC(a) - getHargaAC(b))[0];
+    stateCompare.baselineNo = baseAC['No'];
+  }
+  const otherACs = stateCompare.selectedACs.filter(ac => ac['No'] !== baseAC['No']);
+  const sortedACs = [baseAC, ...otherACs];
 
-  const baseAC = sortedACs[0];
   const baseHarga = getHargaAC(baseAC);
   const baseBiaya = hitungBiayaTahunanAC(baseAC['Kapasitas Pendinginan (BTU/h)'], baseAC['Nilai Efisiensi (EER/CSPF)'], baseAC['Daya (watt)'], params.jamPerHari, params.tarif);
 
@@ -2380,6 +2386,7 @@ function renderACGridCompare() {
 
   grid.innerHTML = currentData.map((ac, index) => {
     const isSelected = stateCompare.selectedACs.some(s => s['No'] === ac['No']);
+    const isBaseline = stateCompare.baselineNo === ac['No'];
     const merek = ac['Merek'] || '-';
     const model = ac['Model'] || ac['Famili'] || '-';
     const tipe = ac['Tipe'] || '-';
@@ -2391,39 +2398,43 @@ function renderACGridCompare() {
     const harga = estimasiHarga(btu, tipe, ac['Harga (Rp)']);
     
     return `
-      <div class="ac-card animate-in ${isSelected ? 'selected' : ''}" data-ac-no="${no}" data-index="${index}">
+      <div class="ac-card animate-in ${isSelected ? 'selected' : ''} ${isBaseline ? 'is-baseline' : ''}" data-ac-no="${no}" data-index="${index}">
+        ${isBaseline ? '<div class="baseline-ribbon">🏷️ BASELINE</div>' : ''}
         <div class="ac-card-header">
           <div class="ac-brand">${merek}</div>
           <div class="ac-type-badge ${tipe.toLowerCase().includes('inverter') && !tipe.toLowerCase().includes('non') ? 'inverter' : 'non-inverter'}">
             ${tipe.toLowerCase().includes('inverter') && !tipe.toLowerCase().includes('non') ? 'Inverter' : 'Non-Inverter'}
           </div>
         </div>
-        <div class="ac-model">${model}</div>
-        <div class="ac-stars">
-          ${'⭐'.repeat(ac['Rating Bintang (1-5)'] || 0)}
-        </div>
-        <div class="ac-specs">
-          <div class="spec">
-            <span class="spec-label">Kapasitas</span>
-            <span class="spec-value">${typeof btu === 'number' ? new Intl.NumberFormat('id-ID').format(btu) : btu} BTU/h</span>
+        <div class="ac-card-body">
+          <div class="ac-model">${model}</div>
+          <div class="ac-stars">
+            ${'⭐'.repeat(ac['Rating Bintang (1-5)'] || 0)}
           </div>
-          <div class="spec">
-            <span class="spec-label">Daya</span>
-            <span class="spec-value">${typeof daya === 'number' ? new Intl.NumberFormat('id-ID').format(daya) : daya} W</span>
-          </div>
-          <div class="spec">
-            <span class="spec-label">Efisiensi</span>
-            <span class="spec-value">${typeof efisiensi === 'number' ? efisiensi.toFixed(2) : efisiensi} ${baseline}</span>
-          </div>
-          <div class="spec">
-            <span class="spec-label">Est. Harga</span>
-            <span class="spec-value biaya">Rp ${new Intl.NumberFormat('id-ID').format(harga)}</span>
+          <div class="ac-specs">
+            <div class="spec">
+              <span class="spec-label">Kapasitas</span>
+              <span class="spec-value">${typeof btu === 'number' ? new Intl.NumberFormat('id-ID').format(btu) : btu} BTU/h</span>
+            </div>
+            <div class="spec">
+              <span class="spec-label">Daya</span>
+              <span class="spec-value">${typeof daya === 'number' ? new Intl.NumberFormat('id-ID').format(daya) : daya} W</span>
+            </div>
+            <div class="spec">
+              <span class="spec-label">Efisiensi</span>
+              <span class="spec-value">${typeof efisiensi === 'number' ? efisiensi.toFixed(2) : efisiensi} ${baseline}</span>
+            </div>
+            <div class="spec">
+              <span class="spec-label">Est. Harga</span>
+              <span class="spec-value biaya">Rp ${new Intl.NumberFormat('id-ID').format(harga)}</span>
+            </div>
           </div>
         </div>
         <div class="ac-card-footer">
           <button class="btn btn-compare-compare" data-ac-no="${no}">
             ${isSelected ? '✓ Dipilih' : '+ Bandingkan'}
           </button>
+          ${isSelected && !isBaseline ? `<button class="btn btn-set-baseline" data-ac-no="${no}">🏷️ Jadikan Baseline</button>` : ''}
         </div>
       </div>
     `;
@@ -2434,6 +2445,14 @@ function renderACGridCompare() {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
       toggleSelectACCompare(parseInt(btn.dataset.acNo));
+    });
+  });
+
+  // Bind baseline buttons
+  grid.querySelectorAll('.btn-set-baseline').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      setBaselineCompare(parseInt(btn.dataset.acNo));
     });
   });
 
@@ -2458,13 +2477,33 @@ function toggleSelectACCompare(no) {
   const index = stateCompare.selectedACs.findIndex(ac => ac['No'] === no);
   if (index >= 0) {
     stateCompare.selectedACs.splice(index, 1);
+    // If removed AC was baseline, pick first remaining as baseline
+    if (stateCompare.baselineNo === no) {
+      stateCompare.baselineNo = stateCompare.selectedACs.length > 0 ? stateCompare.selectedACs[0]['No'] : null;
+    }
   } else {
     if (stateCompare.selectedACs.length >= 3) {
       showToast('Maksimal membandingkan 3 AC', 'warning');
       return;
     }
     const ac = getACById(no);
-    if (ac) stateCompare.selectedACs.push(ac);
+    if (ac) {
+      stateCompare.selectedACs.push(ac);
+      // First selected AC auto-becomes baseline
+      if (stateCompare.selectedACs.length === 1) {
+        stateCompare.baselineNo = no;
+      }
+    }
+  }
+  updateCompareBarCompare();
+  renderACGridCompare();
+}
+
+function setBaselineCompare(no) {
+  stateCompare.baselineNo = no;
+  const ac = stateCompare.selectedACs.find(a => a['No'] === no);
+  if (ac) {
+    showToast(`${ac['Merek']} — ${ac['Model'] || ac['Famili'] || ''} dijadikan Baseline!`, 'success');
   }
   updateCompareBarCompare();
   renderACGridCompare();
@@ -2473,10 +2512,17 @@ function toggleSelectACCompare(no) {
 function updateCompareBarCompare() {
   const bar = document.getElementById('compare-bar-inter');
   const count = document.getElementById('compare-count-inter');
+  const baselineInfo = document.getElementById('compare-baseline-info');
   
   if (stateCompare.selectedACs.length > 0) {
     bar.style.display = 'flex';
     count.textContent = stateCompare.selectedACs.length;
+    // Show baseline info
+    if (baselineInfo) {
+      const baseAC = stateCompare.selectedACs.find(ac => ac['No'] === stateCompare.baselineNo);
+      baselineInfo.textContent = baseAC ? `Baseline: ${baseAC['Merek']} ${baseAC['Model'] || baseAC['Famili'] || ''}` : '';
+      baselineInfo.style.display = baseAC ? 'block' : 'none';
+    }
   } else {
     bar.style.display = 'none';
   }
@@ -2484,6 +2530,8 @@ function updateCompareBarCompare() {
 
 function clearComparisonCompare() {
   stateCompare.selectedACs = [];
+  stateCompare.baselineNo = null;
+  stateCompare.customPrices = {};
   updateCompareBarCompare();
   renderACGridCompare();
   document.getElementById('analisis-inter-ac').style.display = 'none';

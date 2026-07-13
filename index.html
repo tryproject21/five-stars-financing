@@ -559,21 +559,13 @@
     </div> <!-- /view-ac -->
 
     <div id="view-ac-compare" class="app-view">
-      <section class="hero-section" style="padding-bottom: 2rem;">
-        <div class="hero-bg">
-          <div class="hero-orb orb-1"></div>
-          <div class="hero-orb orb-2"></div>
-        </div>
-        <div class="container hero-content">
-          <h1 class="hero-title animate-in" style="font-size: 2.5rem;">
-            Bandingkan <span class="gradient-text">Produk AC</span>
-          </h1>
-          <p class="hero-subtitle animate-in">Cari, pilih 2-3 AC, dan lihat kelayakan investasi (Upgrade ROI) antar tipe AC tersebut.</p>
-        </div>
-      </section>
-
-      <section class="section" style="padding-top: 1rem;">
+      <section class="section" style="padding-top: calc(var(--nav-height) + 2rem);">
         <div class="container">
+          <div class="section-header" style="margin-bottom: 1.5rem;">
+            <h2 class="section-title">Bandingkan <span class="gradient-text">Produk AC</span></h2>
+            <p class="section-subtitle">Pilih 2-3 AC, tentukan baseline, dan lihat analisis kelayakan investasi antar produk.</p>
+          </div>
+
           <!-- Filters -->
           <div class="filter-bar glass-card animate-in">
             <div class="filter-group">
@@ -612,11 +604,14 @@
             </div>
           </div>
 
-          <!-- Selected for comparison -->
+          <!-- Selected for comparison (floating bar) -->
           <div id="compare-bar-inter" class="compare-bar glass-card" style="display:none;">
             <div class="compare-info">
               <span>📊</span>
-              <span id="compare-count-inter">0</span> AC dipilih
+              <div>
+                <div><span id="compare-count-inter">0</span> AC dipilih</div>
+                <div id="compare-baseline-info" style="font-size: 0.75rem; opacity: 0.7; display: none;"></div>
+              </div>
             </div>
             <div class="compare-actions">
               <button id="btn-compare-inter" class="btn btn-primary btn-sm">Bandingkan Antar AC</button>

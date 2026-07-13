@@ -1242,6 +1242,68 @@ html:not([data-theme="light"]) .theme-toggle-btn .light-icon {
   color: var(--bg-primary);
 }
 
+/* btn-compare-compare (used in compare view) */
+.btn-compare-compare {
+  width: 100%;
+  padding: 0.5rem;
+  background: rgba(0, 229, 255, 0.1);
+  border: 1px solid rgba(0, 229, 255, 0.2);
+  border-radius: var(--border-radius-xs);
+  color: var(--accent-cyan);
+  font-family: var(--font-family);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.btn-compare-compare:hover {
+  background: rgba(0, 229, 255, 0.2);
+  border-color: var(--accent-cyan);
+}
+
+.ac-card.selected .btn-compare-compare {
+  background: var(--accent-cyan);
+  color: var(--bg-primary);
+}
+
+/* Baseline state */
+.ac-card.is-baseline {
+  border-color: #f59e0b;
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.2);
+}
+
+.baseline-ribbon {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #000;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-align: center;
+  padding: 0.3rem 0.75rem;
+  letter-spacing: 0.05em;
+}
+
+.btn-set-baseline {
+  width: 100%;
+  margin-top: 0.4rem;
+  padding: 0.4rem;
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: var(--border-radius-xs);
+  color: #f59e0b;
+  font-family: var(--font-family);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.btn-set-baseline:hover {
+  background: rgba(245, 158, 11, 0.25);
+  border-color: #f59e0b;
+  transform: translateY(-1px);
+}
+
 /* --- Empty State --- */
 .empty-state {
   text-align: center;
