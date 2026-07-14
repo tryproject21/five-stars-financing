@@ -566,8 +566,7 @@
             <p class="section-subtitle">Pilih 2-3 AC, tentukan baseline, dan lihat analisis kelayakan investasi antar produk.</p>
           </div>
 
-          <!-- Filters -->
-          <div class="filter-bar glass-card animate-in">
+          <div class="filter-bar glass-card animate-in" style="flex-wrap: wrap;">
             <div class="filter-group">
               <label for="filter-brand-compare">Merek</label>
               <select id="filter-brand-compare" class="select-input select-sm">
@@ -583,23 +582,46 @@
               </select>
             </div>
             <div class="filter-group">
-              <label for="filter-rating-compare">Min Rating</label>
+              <label for="filter-rating-compare">Rating Bintang</label>
               <select id="filter-rating-compare" class="select-input select-sm">
-                <option value="">Semua</option>
-                <option value="5">⭐⭐⭐⭐⭐</option>
-                <option value="4">⭐⭐⭐⭐+</option>
-                <option value="3">⭐⭐⭐+</option>
+                <option value="">Semua Rating</option>
+                <optgroup label="── Hanya Bintang Tertentu ──">
+                  <option value="exact-5">⭐⭐⭐⭐⭐ (5 saja)</option>
+                  <option value="exact-4">⭐⭐⭐⭐ (4 saja)</option>
+                  <option value="exact-3">⭐⭐⭐ (3 saja)</option>
+                  <option value="exact-2">⭐⭐ (2 saja)</option>
+                  <option value="exact-1">⭐ (1 saja)</option>
+                </optgroup>
+                <optgroup label="── Minimum Bintang ──">
+                  <option value="min-5">⭐⭐⭐⭐⭐ ke atas</option>
+                  <option value="min-4">⭐⭐⭐⭐ ke atas</option>
+                  <option value="min-3">⭐⭐⭐ ke atas</option>
+                  <option value="min-2">⭐⭐ ke atas</option>
+                </optgroup>
               </select>
+            </div>
+            <div class="filter-group">
+              <label>Rentang Daya (Watt)</label>
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <input type="number" id="filter-daya-min-compare" class="input-field" placeholder="Min" min="0" style="width: 80px; padding: 6px 8px; font-size: 0.85rem;">
+                <span style="color: var(--text-secondary); font-size: 0.85rem;">–</span>
+                <input type="number" id="filter-daya-max-compare" class="input-field" placeholder="Max" min="0" style="width: 80px; padding: 6px 8px; font-size: 0.85rem;">
+                <span style="color: var(--text-secondary); font-size: 0.75rem;">W</span>
+              </div>
             </div>
             <div class="filter-group">
               <label for="filter-sort-compare">Urutkan</label>
               <select id="filter-sort-compare" class="select-input select-sm">
-                <option value="rating-desc">Rating Tertinggi</option>
-                <option value="biaya-asc">Estimasi Harga Termurah</option>
-                <option value="efisiensi-desc">Efisiensi Tertinggi</option>
+                <option value="rating-desc">⭐ Rating Tertinggi</option>
+                <option value="rating-asc">⭐ Rating Terendah</option>
+                <option value="daya-asc">⚡ Daya Terendah</option>
+                <option value="daya-desc">⚡ Daya Tertinggi</option>
+                <option value="biaya-asc">💰 Estimasi Harga Termurah</option>
+                <option value="efisiensi-desc">🔋 Efisiensi Tertinggi</option>
               </select>
             </div>
-            <div class="filter-group">
+            <div class="filter-group" style="display: flex; align-items: flex-end; gap: 10px;">
+              <button id="btn-apply-filter-compare" class="btn btn-primary btn-sm" style="white-space: nowrap;">🔍 Terapkan Filter</button>
               <span class="result-count" id="result-count-compare">0 hasil</span>
             </div>
           </div>

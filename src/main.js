@@ -434,9 +434,13 @@ function bindEvents() {
     document.getElementById(id).addEventListener('change', applyFilters);
   });
 
-  // --- Filter controls (Compare) ---
-  ['filter-brand-compare', 'filter-type-compare', 'filter-rating-compare', 'filter-sort-compare'].forEach(id => {
-    document.getElementById(id).addEventListener('change', applyFiltersCompare);
+  // --- Filter controls (Compare) — apply only on button click ---
+  document.getElementById('btn-apply-filter-compare').addEventListener('click', applyFiltersCompare);
+  // Also allow Enter key in daya inputs to trigger filter
+  ['filter-daya-min-compare', 'filter-daya-max-compare'].forEach(id => {
+    document.getElementById(id).addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') applyFiltersCompare();
+    });
   });
 
   // --- Compare buttons (Kalkulasi) ---
@@ -2350,12 +2354,36 @@ function applyFiltersCompare() {
 
   const rating = document.getElementById('filter-rating-compare').value;
   if (rating) {
-    data = data.filter(ac => (ac['Rating Bintang (1-5)'] || 0) >= parseInt(rating));
+    if (rating.startsWith('exact-')) {
+      const exactVal = parseInt(rating.replace('exact-', ''));
+      data = data.filter(ac => (ac['Rating Bintang (1-5)'] || 0) === exactVal);
+    } else if (rating.startsWith('min-')) {
+      const minVal = parseInt(rating.replace('min-', ''));
+      data = data.filter(ac => (ac['Rating Bintang (1-5)'] || 0) >= minVal);
+    } else {
+      // Backward compatibility for plain number values
+      data = data.filter(ac => (ac['Rating Bintang (1-5)'] || 0) >= parseInt(rating));
+    }
+  }
+
+  // Filter daya (watt) range from input fields
+  const minDaya = parseFloat(document.getElementById('filter-daya-min-compare').value);
+  const maxDaya = parseFloat(document.getElementById('filter-daya-max-compare').value);
+  if (!isNaN(minDaya) || !isNaN(maxDaya)) {
+    data = data.filter(ac => {
+      const daya = ac['Daya (watt)'] || 0;
+      if (!isNaN(minDaya) && daya < minDaya) return false;
+      if (!isNaN(maxDaya) && daya > maxDaya) return false;
+      return true;
+    });
   }
 
   const sort = document.getElementById('filter-sort-compare').value;
   data.sort((a, b) => {
     if (sort === 'rating-desc') return (b['Rating Bintang (1-5)'] || 0) - (a['Rating Bintang (1-5)'] || 0);
+    if (sort === 'rating-asc') return (a['Rating Bintang (1-5)'] || 0) - (b['Rating Bintang (1-5)'] || 0);
+    if (sort === 'daya-asc') return (a['Daya (watt)'] || Infinity) - (b['Daya (watt)'] || Infinity);
+    if (sort === 'daya-desc') return (b['Daya (watt)'] || 0) - (a['Daya (watt)'] || 0);
     if (sort === 'efisiensi-desc') return (b['Nilai Efisiensi (EER/CSPF)'] || 0) - (a['Nilai Efisiensi (EER/CSPF)'] || 0);
     if (sort === 'biaya-asc') {
       let hargaA = estimasiHarga(a['Kapasitas Pendinginan (BTU/h)'], a['Tipe'], a['Harga (Rp)']);
