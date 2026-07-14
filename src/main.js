@@ -875,9 +875,9 @@ function runInterACComparison() {
     const biayaTahunan = hitungBiayaTahunanAC(btu, efisiensi, daya, params.jamPerHari, params.tarif);
     const isBase = idx === 0;
 
-    // vs baseline
-    const selisihHarga = harga - baseHarga;
+    // vs baseline (as existing)
     const penghematan = baseBiaya - biayaTahunan;
+    const investasi = harga; // Biaya beli AC baru
 
     let payback = '-';
     let npv = 0;
@@ -885,22 +885,19 @@ function runInterACComparison() {
     let keputusan = '-';
     let statusClass = '';
 
-    if (!isBase && selisihHarga > 0 && penghematan > 0) {
-      const analysis = fullAnalysis(selisihHarga, penghematan, params.umurEkonomis, params.discountRate);
+    if (!isBase && penghematan > 0) {
+      const analysis = fullAnalysis(investasi, penghematan, params.umurEkonomis, params.discountRate);
       payback = analysis.paybackPeriod === Infinity || analysis.paybackPeriod < 0 ? '∞' : analysis.paybackPeriod.toFixed(1);
       npv = analysis.npv;
       irr = analysis.irr;
       keputusan = analysis.kelayakan.keputusan;
       statusClass = analysis.kelayakan.status === 'go' ? 'positive' : 'negative';
-    } else if (!isBase && selisihHarga <= 0 && penghematan >= 0) {
-      keputusan = 'NO-BRAINER ✓';
-      statusClass = 'positive';
     } else if (!isBase) {
       keputusan = 'TIDAK LAYAK';
       statusClass = 'negative';
     }
 
-    return { ac, harga, btu, daya, efisiensi, baseline, rating, tipe, biayaTahunan, isBase, selisihHarga, penghematan, payback, npv, irr, keputusan, statusClass };
+    return { ac, harga, btu, daya, efisiensi, baseline, rating, tipe, biayaTahunan, isBase, penghematan, payback, npv, irr, keputusan, statusClass };
   });
 
   // Render Summary Table
@@ -956,10 +953,6 @@ function runInterACComparison() {
           </tr>
           <tr class="separator-row">
             <td colspan="${sortedACs.length + 1}" style="padding: 0.25rem;"></td>
-          </tr>
-          <tr>
-            <td><strong>Selisih Harga vs Baseline</strong></td>
-            ${summaryData.map(d => `<td>${d.isBase ? '-' : 'Rp ' + new Intl.NumberFormat('id-ID').format(d.selisihHarga)}</td>`).join('')}
           </tr>
           <tr>
             <td><strong>Penghematan Listrik/Thn</strong></td>
@@ -1042,10 +1035,6 @@ function runInterACComparison() {
             <div class="metric-mini">
               <span class="metric-mini-label">Harga AC</span>
               <span class="metric-mini-value" style="color: var(--text-primary);">Rp ${new Intl.NumberFormat('id-ID').format(harga)}</span>
-            </div>
-            <div class="metric-mini">
-              <span class="metric-mini-label">Selisih Harga</span>
-              <span class="metric-mini-value ${selisihHarga <= 0 ? 'positive' : ''}" style="color: ${selisihHarga <= 0 ? 'var(--accent-teal)' : 'var(--text-primary)'};">Rp ${new Intl.NumberFormat('id-ID').format(selisihHarga)}</span>
             </div>
             <div class="metric-mini">
               <span class="metric-mini-label">Hemat Listrik/Thn</span>
